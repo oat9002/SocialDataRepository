@@ -9,5 +9,5 @@ spark = SparkSession\
 
 sc = spark.sparkContext
 
-twqDF = spark.read.parquet("tweetQuery.parquet")
+twqDF = spark.read.parquet("../tweetQuery.parquet")
 twqDF.show()

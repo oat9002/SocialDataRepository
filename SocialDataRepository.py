@@ -1,4 +1,4 @@
-import TwitterRepository
+from repository import TwitterRepository
 from flask import Flask, request
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -9,7 +9,7 @@ def index():
 
 @app.route("/twitter/saveTweetQuery", methods=['POST'])
 def saveTweetQuery():
-    TwitterRepository.saveTweetQuery({"query": request.form['query']})
+    TwitterRepository.saveTweetQuery({"query": str(request.form['query'])})
     return ('', 204)
 
 if __name__ == "__main__":

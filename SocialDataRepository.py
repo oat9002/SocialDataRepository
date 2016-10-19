@@ -1,5 +1,8 @@
 from repository import TwitterRepository
+from service import byteify
 from flask import Flask, request
+import json
+
 app = Flask(__name__)
 app.config['DEBUG'] = True
 
@@ -9,7 +12,13 @@ def index():
 
 @app.route("/twitter/saveTweetQuery", methods=['POST'])
 def saveTweetQuery():
-    TwitterRepository.saveTweetQuery({"query": str(request.form['query'])})
+    # print {"query":request.form['query']}
+    # TwitterRepository.saveTweetQuery(request.form['query'])
+    return ('', 204)
+
+@app.route("/twitter/saveTweet", methods=['POST'])
+def saveTweet():
+    TwitterRepository.saveTweet(byteify.json_loads_byteified(request.data))
     return ('', 204)
 
 if __name__ == "__main__":

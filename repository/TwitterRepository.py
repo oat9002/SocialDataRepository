@@ -15,11 +15,12 @@ def saveTweet(tweets):
     tweetBaseDF.createOrReplaceTempView("tweet")
     tweetArr = []
     for tweet in tweets['statuses']:
-        existTweet = spark.sql("SELECT id FROM tweet WHERE id_str == '%s'" % tweet['id_str'])
+        existTweet = spark.sql("SELECT id_str FROM tweet WHERE id_str == '%s'" % tweet['id_str'])
         if existTweet.count() == 0:
-            tweetArr.append(json.json_normalize(tweet))
-    tweetRDD = sc.parallelize(tweetArr)
-    tweetDF = spark.read.json(tweetRDD.take(1))
+            tweetArr.append(json.json_normalize(tweet).to_json())
+    # print tweetArr[0]
+    tweetRDD = sc.parallelize([tweetArr[0]])
+    tweetDF = spark.read.json(tweetRDD)
     tweetDF.show()
     # tweetDF.write.mode("append").parquet(tweetParquet)
 

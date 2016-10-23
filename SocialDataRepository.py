@@ -23,5 +23,10 @@ def saveTweet():
     TwitterRepository.saveTweet(json.loads(request.get_data()))
     return ('', 204)
 
+@app.route("/twitter/read", methods=['GET'])
+def readTweet():
+    TwitterRepository.readTweet()
+    return ('', 204)
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

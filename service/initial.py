@@ -16,7 +16,7 @@ sc = spark.sparkContext
 #for tweetQuery
 try:
     tweetQueryDF = spark.read.json("tweetQuery.json")
-    tweetQueryDF.write.parquet("tweetQuery.parquet")
+    tweetQueryDF.write.parquet("tweetLocation.parquet")
 except:
     print(sys.exc_info()[1])
 

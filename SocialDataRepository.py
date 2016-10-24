@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from repository import TwitterRepository
-from service import byteify
 from flask import Flask, request
 import json
 

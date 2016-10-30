@@ -26,14 +26,31 @@ try:
     tweetsJSON = json.load("tweet.json")
     tweetsJSON = map(lambda tw: tw['created_at'] = tw['created_at']['$date'], tweetsJSON)
     tweetsJSON = map(lambda tw: del tw['_id'], tweetsJSON)
-    NewTweets = []
+    rawTweets = []
     for tweet in tweetsJSON:
-        TwitterRepository.improveTweetCol(tweet)
         normalizedTweet = json_normalize(tweet)
         map(lambda column: normalizedTweet.rename(columns = {column: ''.join(map(lambda t: t.replace(".", "_"), list(column)))}, inplace = True) ,normalizedTweet.columns)
-        NewTweets.append(normalizedTweet.to_json())
-    tweetRDD = sc.parallelize(NewTweets)
+        rawTweets.append(normalizedTweet.to_json())
+    rawTweetRDD = sc.parallelize(rawTweets)
+    rawTweetDF = spark.read.json(rawTweetRDD)
+    rawTweetDF.write.parquet("rawTweet.parquet")
+
+    tweets = []
+    users = []
+    places = []
+    for tweet in tweetsJSON:
+        tweets.append(TwitterRepository.selectTweetCol(tweet))
+        users.append(TwitterRepository.selectUserCol(tweet['user']))
+        places.append(TwitterRepository.selectPlaceCol(tweet['place'])) if tweet['place'] != "null"
+    tweetRDD = sc.parallelize(tweets)
     tweetDF = spark.read.json(tweetRDD)
-    tweetDF.write.mode("write").parquet("tweet.parquet")
+    tweetDF.write.parquet("tweet.parquet")
+    userRDD = sc.parallelize(users)
+    userDF = spark.read.json(userRDD)
+    userDF.write.parquet('tweetUser.parquet')
+    placeRDD = sc.parallelize(places)
+    placeDF = sc.parallelize(placeRDD)
+    placeDF.write.parquet("tweetPlace.parquet")
+
 except:
     print(sys.exc_info()[1])

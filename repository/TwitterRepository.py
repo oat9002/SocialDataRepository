@@ -1,8 +1,10 @@
 from pyspark import SparkContext
 from pyspark.sql import *
 from pandas.io.json import json_normalize
+from geopy.distance import great_circle
 import dateutil.parser as date
 import uuid
+
 
 spark = SparkSession\
     .builder\
@@ -58,15 +60,27 @@ def saveRawTweet(tweets):
 #########################################################################################################
 
 #TweetLocationSearch table
-def saveTweetLocationSearch(query):
+def saveTweetLocationSearch(location):
     tweetLocationSearchParquet = "tweetLocationSearch.parquet"
     tweetLocationSearchBaseDF = spark.read.parquet(tweetLocationSearchParquet)
-    exi
+    existLocation = False
+    for row in tweetLocationSearchBaseDF.collect():
+        newport_ri = (location['coordinates'][0], location['coordinates'][1])
+        cleveland_oh = (row['coordinates'][0], ro['coordinates'][1])
+        acceptRadius = great_circle(newport_ri, cleveland_oh).kilometers
+        if acceptRadius <= 0.5:
+            existLocation = True
+            return row['id']
+        if !existLocation:
+            newLocationRDD = sc.parallelize([createTweetLocationSearchSchema(location)])
+            newLocationDF = spark.read.json(newLocationRDD)
+            newLocation.write.mode("append").parquet(tweetLocationSearchParquet)
+            return newLocation['id']
 
-def createTweetLocationSearchSchema(query):
+def createTweetLocationSearchSchema(location):
     tweetLocationSearch = {}
-    tweetLocationSearch['id'] = query['id'];
-    tweetLocationSearch['coordinates'] = query['coordinates'] if query['coordinates'] != "null" else None
+    tweetLocationSearch['id'] = uuid.uuid4()
+    tweetLocationSearch['coordinates'] = location['coordinates'] if location['coordinates'] != "null" else None
     tweetLocationSearch['frequency'] = 0
     return tweetLocationSearch
 
@@ -74,15 +88,21 @@ def createTweetLocationSearchSchema(query):
 #########################################################################################################
 
 #TweetKeyword table
-def saveTweetKeyword(keyword, tweetLocationSearchId):
+def saveTweetKeyword(query):
     tweetKeywordParquet = "tweetKeyword.parquet"
     tweetKeywordBaseDF = spark.read.parquet(tweetKeywordParquet)
+    existTweetKeyword = tweetKeywordBaseDF.where(tweetKeywordBaseDF.keyword == query['keyword'])
+    if existTweetKeyword.count() == 0:
+        tweetlocationsearchId = saveTweetLocationSearch(query)
+        tweetKeywordRDD = sc.parallelize([createTweetKeywordSchema(query, tweetlocationsearchId)])
+        tweetKeywordDF = spark.read.json(tweetKeywordRDD)
+        tweetKeywordDF.write.mode("append").parquet(tweetKeywordParquet)
 
-def createTweetKeywordSchema(keyword, tweetLocationSearchId):
+def createTweetKeywordSchema(query, tweetlocationsearchId):
     tweetKeyword = {}
-    tweetKeyword['id'] = keyword['id']
-    tweetKeyword['keyword'] = keyword['keyword']
-    tweetKeyword['tweetlocationsearch_id'] = tweetLocationSearchId
+    tweetKeyword['id'] = uuid.uuid4()
+    tweetKeyword['keyword'] = query['keyword']
+    tweetKeyword['tweetlocationsearch_id'] = tweetlocationsearchId
     return tweetKeyword
 
 #########################################################################################################

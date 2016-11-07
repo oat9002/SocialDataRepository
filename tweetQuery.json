@@ -1,3 +1,7 @@
-{"query":"#kmitl"}
-{"query":"เดอะมอลล์บางกะปิ"}
-{"query":"kmitl"}
+{
+  "queries" : [
+              {"keyword":"#kmitl"},
+              {"keyword":"เดอะมอลล์บางกะปิ"},
+              {"keyword":"kmitl"}
+            ]
+}

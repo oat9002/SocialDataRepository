@@ -9,5 +9,16 @@ spark = SparkSession\
 
 sc = spark.sparkContext
 
-twqDF = spark.read.parquet("../tweetQuery.parquet")
-twqDF.show()
+queryParquet = "../QUERY.parquet"
+queryBaseDF = spark.read.parquet(queryParquet)
+queryBaseDF.show()
+
+queryDF = spark.read.parquet("../QUERY.parquet")
+keywords = queryDF.select(queryDF.id, queryDF.keyword).collect()
+print keywords[0]['id']
+
+tweetDF = spark.read.parquet("../TW_TWEET.parquet")
+tweets = tweetDF.select(tweetDF.query_id).collect()
+print tweets
+print len(tweets)
+print tweetDF.count()

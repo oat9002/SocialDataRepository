@@ -18,7 +18,6 @@ keywords = queryDF.select(queryDF.id, queryDF.keyword).collect()
 print keywords[0]['id']
 
 tweetDF = spark.read.parquet("../TW_TWEET.parquet")
-tweets = tweetDF.select(tweetDF.query_id).collect()
-print tweets
+print tweetDF.toJSON().first()
 print len(tweets)
 print tweetDF.count()

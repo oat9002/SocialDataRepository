@@ -13,8 +13,7 @@ def index():
 
 @app.route("/saveQuery", methods=['POST'])
 def saveQuery():
-    # print {"query":request.form['query']}
-    # TwitterRepository.saveTweetQuery(request.form['query'])
+    SocialDataRepository.saveQuery(json.loads(request.get_data()))
     return ('', 204)
 
 @app.route("/twitter/saveTweet", methods=['POST'])

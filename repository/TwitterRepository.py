@@ -60,7 +60,6 @@ def saveRawTweet(tweets):
 
 #########################################################################################################
 
-
 #User table
 def saveUserFromTweet(user):
     userParquet = "TW_USER.parquet"
@@ -79,25 +78,3 @@ def selectUserCol(user):
     return newUser
 
 #########################################################################################################
-
-#Test
-def readTweet():
-    tweetParquet = "tweetTest.parquet"
-    tweetDF = spark.read.parquet(tweetParquet)
-    tweetDF.createOrReplaceTempView("tweet")
-    tweet = tweetDF.where(tweetDF.id_str['0'] == "790280483972194305")
-    tweet.show()
-    print tweet.select(tweet.text).collect()
-
-#########################################################################################################
-
-
-
-# def saveTweetQuery(tweetQuery):
-#     tweetQueriesParquet = "tweetQuery.parquet"
-#     tweetQueryBaseDF = spark.read.parquet(tweetQueriesParquet)
-#     existTweetQuery = tweetQueryBaseDF.where(tweetQueryBaseDF.)
-#     if existTweetQuery.count() == 0:
-#         tweetQueryRDD = sc.parallelize([tweetQuery])
-#         tweetQueryDF = spark.read.json(tweetQueryRDD)
-#         tweetQueryDF.show()

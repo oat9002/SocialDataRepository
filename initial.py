@@ -32,7 +32,7 @@ if not path.exists("TW_TWEET.parquet"):
         # rawTweetRDD = sc.parallelize(rawTweets)
         # rawTweetDF = spark.read.json(rawTweetRDD)
         # rawTweetDF.write.parquet("rawTweet.parquet")
-        #
+
         tweets = []
         users = []
         places = []

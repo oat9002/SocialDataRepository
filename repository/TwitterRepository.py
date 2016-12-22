@@ -25,7 +25,7 @@ def saveTweet(tweets, queryId):
             tweetArr.append(selectTweetCol(tweet, queryId))
             saveUserFromTweet(tweet['user'])
     tweetRDD = sc.parallelize(tweetArr)
-    tweetDF = spark.read.json(tweetRDD)
+    tweetDF = spark.createDataFrame(tweetRDD)
     tweetDF.write.mode("append").parquet(tweetParquet)
     saveRawTweet(tweetArr)
     return tweetArr #for saving to Social table
@@ -55,7 +55,7 @@ def saveRawTweet(tweets):
             map(lambda column: normalizedTweet.rename(columns = {column: ''.join(map(lambda t: t.replace(".", "_"), list(column)))}, inplace = True) ,normalizedTweet.columns)
             tweetArr.append(normalizedTweet.to_json())
     tweetRDD = sc.parallelize(tweetArr)
-    tweetDF = spark.read.json(tweetRDD)
+    tweetDF = spark.createDataFrame(tweetRDD)
     tweetDF.write.mode("append").parquet(tweetParquet)
 
 #########################################################################################################
@@ -67,7 +67,7 @@ def saveUserFromTweet(user):
     existUser = userBaseDF.where(uszerBaseDF.id == user['id'])
     if existUser.count() == 0:
         userRDD = sc.parallelize([selectUserCol(user)])
-        userDF = spark.read.json(userRDD)
+        userDF = spark.createDataFrame(userRDD)
         userDF.write.mode("append").parquet(userParquet)
 
 def selectUserCol(user):

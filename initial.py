@@ -16,6 +16,17 @@ spark = SparkSession\
 
 sc = spark.sparkContext
 
+#for query
+if not path.exists("QUERY.parquet"):
+    with open('tweetQuery.json') as json_data:
+        queryJson = json.load(json_data)
+        queries = []
+        for query in queryJson['queries']:
+            queries.append(SocialDataRepository.createQuerySchema(query))
+        queryRDD = sc.parallelize(queries)
+        queryDF = spark.createDataFrame(queryRDD)
+        queryDF.write.parquet("QUERY.parquet")
+
 # for tweet
 if not path.exists("TW_TWEET.parquet"):
     with open('tweet.json') as json_data:
@@ -51,14 +62,3 @@ if not path.exists("TW_TWEET.parquet"):
         userDF = spark.createDataFrame(userRDD)
         if not path.exists("TW_USER.parquet"):
             userDF.write.parquet('TW_USER.parquet')
-
-#for query
-if not path.exists("QUERY.parquet"):
-    with open('tweetQuery.json') as json_data:
-        queryJson = json.load(json_data)
-        queries = []
-        for query in queryJson['queries']:
-            queries.append(SocialDataRepository.createQuerySchema(query))
-        queryRDD = sc.parallelize(queries)
-        queryDF = spark.createDataFrame(queryRDD)
-        queryDF.write.parquet("QUERY.parquet")

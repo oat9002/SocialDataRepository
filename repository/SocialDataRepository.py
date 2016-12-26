@@ -63,12 +63,12 @@ def createQuerySchema(query):
     querySchema['id'] = str(uuid.uuid4())
     querySchema['keyword'] = query['keyword']
     querySchema['frequency'] = 0
-    querySchema['place_id'] = query['place_id']
-    newport_ri = (location['coordinates'][0], location['coordinates'][1])
-    cleveland_oh = (row['coordinates'][0], ro['coordinates'][1])
-    acceptRadius = great_circle(newport_ri, cleveland_oh).kilometers
-    if acceptRadius <= 0.5:
-        existLocation = True
+    # querySchema['place_id'] = query['place_id']
+    # newport_ri = (location['coordinates'][0], location['coordinates'][1])
+    # cleveland_oh = (row['coordinates'][0], ro['coordinates'][1])
+    # acceptRadius = great_circle(newport_ri, cleveland_oh).kilometers
+    # if acceptRadius <= 0.5:
+    #     existLocation = True
     return querySchema
 
 #########################################################################################################

@@ -44,19 +44,31 @@ def selectTweetCol(tweet, queryId):
 
 #Tweet raw data
 def saveRawTweet(tweets):
-    tweetParquet = "rawTweet.parquet"
-    tweetBaseDF = spark.read.parquet(tweetParquet)
+    tweetJson = "tweet_backup.json"
+    tweetBaseDF = spark.read.json(tweetJson)
     tweetArr = []
     for tweet in tweets:
-        existTweet = tweetBaseDF.where(tweetBaseDF.id['0'] == tweet['id'])
+        existTweet = tweetBaseDF.where(tweetBaseDF.id == tweet['id'])
         if existTweet.count() == 0:
-            improveTweetCol(tweet)
-            normalizedTweet = json_normalize(tweet)
-            map(lambda column: normalizedTweet.rename(columns = {column: ''.join(map(lambda t: t.replace(".", "_"), list(column)))}, inplace = True) ,normalizedTweet.columns)
-            tweetArr.append(normalizedTweet.to_json())
+            tweetArr.append(tweet)
     tweetRDD = sc.parallelize(tweetArr)
     tweetDF = spark.createDataFrame(tweetRDD)
-    tweetDF.write.mode("append").parquet(tweetParquet)
+    tweetDF.write.mode("append").json(tweetJson)
+
+# def saveRawTweet(tweets):
+#     tweetParquet = "rawTweet.parquet"
+#     tweetBaseDF = spark.read.parquet(tweetParquet)
+#     tweetArr = []
+#     for tweet in tweets:
+#         existTweet = tweetBaseDF.where(tweetBaseDF.id['0'] == tweet['id'])
+#         if existTweet.count() == 0:
+#             improveTweetCol(tweet)
+#             normalizedTweet = json_normalize(tweet)
+#             map(lambda column: normalizedTweet.rename(columns = {column: ''.join(map(lambda t: t.replace(".", "_"), list(column)))}, inplace = True) ,normalizedTweet.columns)
+#             tweetArr.append(normalizedTweet.to_json())
+#     tweetRDD = sc.parallelize(tweetArr)
+#     tweetDF = spark.createDataFrame(tweetRDD)
+#     tweetDF.write.mode("append").parquet(tweetParquet)
 
 #########################################################################################################
 
@@ -64,7 +76,7 @@ def saveRawTweet(tweets):
 def saveUserFromTweet(user):
     userParquet = "TW_USER.parquet"
     userBaseDF = spark.read.parquet(userParquet)
-    existUser = userBaseDF.where(uszerBaseDF.id == user['id'])
+    existUser = userBaseDF.where(userBaseDF.id == user['id'])
     if existUser.count() == 0:
         userRDD = sc.parallelize([selectUserCol(user)])
         userDF = spark.createDataFrame(userRDD)

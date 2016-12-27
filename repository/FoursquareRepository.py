@@ -43,7 +43,7 @@ def selectVenueCol(venue,queryId):
 #FQ_CHECKIN####################################
 def saveCheckin(checkin,venueId):
     checkinParquet = "FQ_CHECKIN.parquet"
-    writeParquet(checkinParquet,[selectCheckinCol(checkin,queryId)])             
+    writeParquet(checkinParquet,[selectCheckinCol(checkin,venueId)])             
 
 def selectCheckinCol(checkin,venueId):
     newCheckin = {}
@@ -63,7 +63,8 @@ def saveTip(tips,venueId):
             existTip = tipBaseDF.where(tipBaseDF.tipid == tip['id'])
             if existTip.count() == 0:
                 allTips.append(selectTipCol(tip,venueId))
-        writeParquet(checkinParquet,allTips)     
+        print(allTips)
+        writeParquet(tipParquet,allTips)     
     else:
         for tip in tips['items']:
             allTips.append(selectTipCol(tip,venueId))

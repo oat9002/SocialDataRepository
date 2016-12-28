@@ -5,6 +5,8 @@ from pandas.io.json import json_normalize
 from geopy.distance import great_circle
 import dateutil.parser as date
 import uuid
+import json
+import os
 
 
 spark = SparkSession\
@@ -19,15 +21,17 @@ def saveTweet(tweets, queryId):
     tweetParquet = "TW_TWEET.parquet"
     tweetBaseDF = spark.read.parquet(tweetParquet)
     tweetArr = []
+    tweetArrBackup = []
     for tweet in tweets:
         existTweet = tweetBaseDF.where(tweetBaseDF.id == tweet['id'])
         if existTweet.count() == 0:
             tweetArr.append(selectTweetCol(tweet, queryId))
             saveUserFromTweet(tweet['user'])
+            tweetArrBackup.append(tweet)
     tweetRDD = sc.parallelize(tweetArr)
     tweetDF = spark.createDataFrame(tweetRDD)
     tweetDF.write.mode("append").parquet(tweetParquet)
-    saveRawTweet(tweetArr)
+    saveRawTweet(tweetArrBackup)
     return tweetArr #for saving to Social table
 
 def selectTweetCol(tweet, queryId):
@@ -44,16 +48,11 @@ def selectTweetCol(tweet, queryId):
 
 #Tweet raw data
 def saveRawTweet(tweets):
-    tweetJson = "tweet_backup.json"
-    tweetBaseDF = spark.read.json(tweetJson)
-    tweetArr = []
-    for tweet in tweets:
-        existTweet = tweetBaseDF.where(tweetBaseDF.id == tweet['id'])
-        if existTweet.count() == 0:
-            tweetArr.append(tweet)
-    tweetRDD = sc.parallelize(tweetArr)
-    tweetDF = spark.createDataFrame(tweetRDD)
-    tweetDF.write.mode("append").json(tweetJson)
+    tweetJson = "TW_TWEET_BACKUP.json"
+    with open(tweetJson, "a+") as data:
+        for tweet in tweets:
+            data.write(json.dumps(tweet, ensure_ascii=False).encode("utf-8"))
+            data.write(os.linesep)
 
 # def saveRawTweet(tweets):
 #     tweetParquet = "rawTweet.parquet"

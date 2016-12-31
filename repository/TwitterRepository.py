@@ -17,7 +17,7 @@ spark = SparkSession\
 sc = spark.sparkContext
 
 #TW_TWEET table
-def saveTweet(tweets, queryId):
+def saveTweet(tweets, queryId): #queryId is packed with Tweet Data
     tweetParquet = "TW_TWEET.parquet"
     tweetBaseDF = spark.read.parquet(tweetParquet)
     tweetArr = []

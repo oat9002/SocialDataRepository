@@ -33,18 +33,13 @@ if not path.exists("TW_TWEET.parquet"):
         tweetsJSON = json.load(json_data)
         for index in range(0, len(tweetsJSON)):
             tweetsJSON[index]['created_at'] = tweetsJSON[index]['created_at']['$date']
+            if("retweeted_status" in tweetsJSON[index]):
+                if tweetsJSON[index]['retweeted_status'] != None:
+                    tweetsJSON[index]['text'] = tweetsJSON[index]['retweeted_status']['text']
             del tweetsJSON[index]['_id']
 
-        # rawTweets = []
-        # for tweet in tweetsJSON:
-        #     normalizedTweet = json_normalize(tweet)
-        #     map(lambda column: normalizedTweet.rename(columns = {column: ''.join(map(lambda t: t.replace(".", "_"), list(column)))}, inplace = True) ,normalizedTweet.columns)
-        #     rawTweets.append(normalizedTweet.to_json())
-        # rawTweetRDD = sc.parallelize(rawTweets)
-        # rawTweetDF = spark.read.json(rawTweetRDD)
-        # rawTweetDF.write.parquet("rawTweet.parquet")
-
         tweets = []
+        tweet_backup = []
         users = []
         places = []
         for tweet in tweetsJSON:
@@ -53,12 +48,27 @@ if not path.exists("TW_TWEET.parquet"):
             for keyword in keywords:
                 if keyword['keyword'] in tweet['text']:
                     tweets.append(TwitterRepository.selectTweetCol(tweet, keyword['id']))
+                    tweet_backup.append(tweet)
             users.append(TwitterRepository.selectUserCol(tweet['user']))
         tweetRDD = sc.parallelize(tweets)
         tweetDF = spark.createDataFrame(tweetRDD)
         tweetDF.printSchema()
+        print("total parquets: ", tweetDF.count())
         tweetDF.write.parquet("TW_TWEET.parquet")
         userRDD = sc.parallelize(users)
         userDF = spark.createDataFrame(userRDD)
         if not path.exists("TW_USER.parquet"):
             userDF.write.parquet('TW_USER.parquet')
+        TwitterRepository.saveRawTweet(tweet_backup)
+        with open("TW_TWEET_BACKUP.json", 'r') as test:
+            json = [json.loads(line) for line in test]
+            print("total backup: ", len(json))
+
+    # rawTweets = []
+    # for tweet in tweetsJSON:
+    #     normalizedTweet = json_normalize(tweet)
+    #     map(lambda column: normalizedTweet.rename(columns = {column: ''.join(map(lambda t: t.replace(".", "_"), list(column)))}, inplace = True) ,normalizedTweet.columns)
+    #     rawTweets.append(normalizedTweet.to_json())
+    # rawTweetRDD = sc.parallelize(rawTweets)
+    # rawTweetDF = spark.read.json(rawTweetRDD)
+    # rawTweetDF.write.parquet("rawTweet.parquet")

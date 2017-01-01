@@ -3,9 +3,12 @@ from pyspark import SparkContext
 from pyspark.sql import *
 from pandas.io.json import json_normalize
 from geopy.distance import great_circle
+from decimal import Decimal
 import dateutil.parser as date
 import uuid
 import TwitterRepository
+import googlemaps
+import json
 
 
 spark = SparkSession\
@@ -58,17 +61,12 @@ def saveQuery(query):
         queryDF = spark.read.json(queryRDD)
         queryDF.write.mode("append").parquet(queryParquet)
 
-def createQuerySchema(query):
+def createQuerySchema(query, place_id):
     querySchema = {}
     querySchema['id'] = str(uuid.uuid4())
     querySchema['keyword'] = query['keyword']
     querySchema['frequency'] = 0
-    # querySchema['place_id'] = query['place_id']
-    # newport_ri = (location['coordinates'][0], location['coordinates'][1])
-    # cleveland_oh = (row['coordinates'][0], ro['coordinates'][1])
-    # acceptRadius = great_circle(newport_ri, cleveland_oh).kilometers
-    # if acceptRadius <= 0.5:
-    #     existLocation = True
+    querySchema['place_id'] = place_id
     return querySchema
 
 #########################################################################################################
@@ -90,7 +88,21 @@ def createPlaceSchema(place):
     newPlace['geolocation'] = place['geolocation']
     return newPlace
 
-
+def compareQueryAndPlace(place_db, query):
+    gmaps = googlemaps.Client(key='AIzaSyA0_9hFyqLO5uV5pWQUSGL0g5MmtsXwNj4')
+    places = gmaps.places(query=query)
+    geolo_db = place_db['geolocation'].split(",")
+    samePlace = False
+    for place in places:
+        place = json.loads(json.dumps(place, ensure_ascii=False))
+        newport_ri = (Decimal(place['geometry']['lat']), Decimal(place['geometry']['lng']))
+        cleveland_oh = (Decimal(geolo_db[0]), Decimal(geolo_db[1]))
+        acceptRadius = great_circle(newport_ri, cleveland_oh).meters
+        if acceptRadius <= 0.3:
+            samePlace = True
+            break
+    return samePlace
+        
 
 #########################################################################################################
 

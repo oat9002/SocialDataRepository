@@ -16,13 +16,28 @@ spark = SparkSession\
 
 sc = spark.sparkContext
 
+#places
+if not path.exists("PLACE.parquet"):
+    with open("place.json", "r") as file:
+        placeJson = json.load(file)
+        places = []
+        for place in placeJson['places']:
+            places.append(SocialDataRepository.createPlaceSchema(place))
+        placeRDD = sc.parellelize(places)
+        placeDF = spark.createDataframe(placeRDD)
+        placeDF.write.parquet("PLACE.parquet")
+
 #for query
 if not path.exists("QUERY.parquet"):
     with open('tweetQuery.json') as json_data:
         queryJson = json.load(json_data)
         queries = []
+        placeDF = spark.read.parquet("PLACE.parquet")
+        places = placeDF.select(placeDF.id, placeDF.geolocation).collect()
         for query in queryJson['queries']:
-            queries.append(SocialDataRepository.createQuerySchema(query))
+            for place in places:
+                if SocialDataRepository.compareQueryAndPlace(place, query):
+                    queries.append(SocialDataRepository.createQuerySchema(query, place['id']))
         queryRDD = sc.parallelize(queries)
         queryDF = spark.createDataFrame(queryRDD)
         queryDF.write.parquet("QUERY.parquet")
@@ -42,9 +57,9 @@ if not path.exists("TW_TWEET.parquet"):
         tweet_backup = []
         users = []
         places = []
+        queryDF = spark.read.parquet("QUERY.parquet")
+        keywords = queryDF.select(queryDF.id, queryDF.keyword).collect()
         for tweet in tweetsJSON:
-            queryDF = spark.read.parquet("QUERY.parquet")
-            keywords = queryDF.select(queryDF.id, queryDF.keyword).collect()
             for keyword in keywords:
                 if keyword['keyword'] in tweet['text']:
                     tweets.append(TwitterRepository.selectTweetCol(tweet, keyword['id']))
@@ -72,3 +87,5 @@ if not path.exists("TW_TWEET.parquet"):
     # rawTweetRDD = sc.parallelize(rawTweets)
     # rawTweetDF = spark.read.json(rawTweetRDD)
     # rawTweetDF.write.parquet("rawTweet.parquet")
+
+        

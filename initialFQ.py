@@ -24,6 +24,11 @@ with open('fqVenue.json') as json_data:
     parquetFile = spark.read.parquet("FQ_VENUE.parquet")
     parquetFile.show()
 
+    FoursquareRepository.saveCategory(venueJSON['response']['venue']['categories'])
+    parquetFile = spark.read.parquet("FQ_CATEGORY.parquet")
+    parquetFile.show()
+
+
 with open('fqCheckin.json') as json_data:
     checkinJSON = json.load(json_data)
     FoursquareRepository.saveCheckin(checkinJSON['response']['hereNow'], "4bea24b59fa3ef3bc91a80c9")
@@ -38,6 +43,18 @@ with open('fqTip.json') as json_data:
 
     parquetFile = spark.read.parquet("FQ_TIP.parquet")
     parquetFile.show()
+
+    FoursquareRepository.saveUser(tipJSON['response']['tips']['items'][0]['user'])
+    parquetFile = spark.read.parquet("FQ_USER.parquet")
+    parquetFile.show()
+
+with open('fqPhoto.json') as json_data:
+    photoJSON = json.load(json_data)
+    FoursquareRepository.savePhoto(photoJSON['response']['photos'], "4bea24b59fa3ef3bc91a80c9")
+
+    parquetFile = spark.read.parquet("FQ_PHOTO.parquet")
+    parquetFile.show()
+    
 
 print(datetime.datetime.fromtimestamp(1423633830).isoformat())
 

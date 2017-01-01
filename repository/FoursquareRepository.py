@@ -17,9 +17,12 @@ spark = SparkSession\
 sc = spark.sparkContext
 
 def writeParquet(parquetFile,rowArr):
-    rowRDD = sc.parallelize(rowArr)
-    rowDF = spark.createDataFrame(rowRDD)
-    rowDF.write.mode("append").parquet(parquetFile)
+    if len(rowArr) > 0:
+        rowRDD = sc.parallelize(rowArr)
+        rowDF = spark.createDataFrame(rowRDD)
+        rowDF.write.mode("append").parquet(parquetFile)
+    else:
+        print("no row written")
 
 #FQ_VENUE####################################
 def saveVenue(venue,queryId):
@@ -37,7 +40,7 @@ def selectVenueCol(venue,queryId):
     newVenue['venueid'] = venue['id']
     newVenue['query_id'] = queryId
     newVenue['geolocation'] = str(venue['location']['lat'])+','+str(venue['location']['lng'])
-    newVenue['category'] = venue['categories'][0]['name']
+    newVenue['cateid'] = venue['categories'][0]['id']
     return newVenue
 
 #FQ_CHECKIN####################################
@@ -63,7 +66,6 @@ def saveTip(tips,venueId):
             existTip = tipBaseDF.where(tipBaseDF.tipid == tip['id'])
             if existTip.count() == 0:
                 allTips.append(selectTipCol(tip,venueId))
-        print(allTips)
         writeParquet(tipParquet,allTips)     
     else:
         for tip in tips['items']:
@@ -120,4 +122,21 @@ def selectPhotoCol(photo,venueId):
     newPhoto['photo'] = photo['prefix']+photo['suffix']
     newPhoto['venueid'] = venueId
     newPhoto['userid'] = photo['user']['id']
-    return newTip
+    return newPhoto
+
+#FQ_CATEGORY####################################
+def saveCategory(category):
+    categoryParquet = "FQ_CATEGORY.parquet"
+    if path.exists(categoryParquet):     
+        categoryBaseDF = spark.read.parquet(categoryParquet)
+        existCategory = categoryBaseDF.where(categoryBaseDF.cateid == category[0]['id'])
+        if existCategory.count() == 0:
+            writeParquet(categoryParquet,[selectCategoryCol(category[0])])
+    else:
+        writeParquet(categoryParquet,[selectCategoryCol(category[0])])            
+
+def selectCategoryCol(category):
+    newCategory = {}
+    newCategory['cateid'] = category['id']
+    newCategory['name'] = category['name']
+    return newCategory

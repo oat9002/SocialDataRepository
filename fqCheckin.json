@@ -1,0 +1,12 @@
+{
+  "meta": {
+    "code": 200,
+    "requestId": "586257c2db04f53a28d019ae"
+  },
+  "response": {
+    "hereNow": {
+      "count": 84,
+      "items": []
+    }
+  }
+}

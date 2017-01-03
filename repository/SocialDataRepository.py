@@ -57,6 +57,21 @@ def saveQuery(query):
     queryBaseDF = spark.read.parquet(queryParquet)
     existQuery = queryBaseDF.where(queryBaseDF.keyword == query['keyword']).select(queryBaseDF.id)
     if existQuery.count() == 0:
+        placeParquet = "PLACE.parquet"
+        placeDF = spark.read.parquet(placeParquet)
+        places = placeDF.select(placeDF.id, placeDF.geolocation).collect()
+        samePlace = False
+        placeGoogle = getPlacesFromGoogle(query['keyword'])
+        place_id = ""
+        for place in places:
+            samePlace = compareQueryAndPlace(place, placeGoogle, query['keyword'])
+            if samePlace:
+                place_id = place['id']
+                break
+        if samePlace:
+            queries.append(createQuerySchema(query, place_id))
+        else:
+            queries.append(createQuerySchema(query, None))
         queryRDD = sc.parallelize([createQuerySchema(query)])
         queryDF = spark.createDataFrame(queryRDD)
         queryDF.write.mode("append").parquet(queryParquet)

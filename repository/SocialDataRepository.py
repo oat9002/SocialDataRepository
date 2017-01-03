@@ -113,12 +113,12 @@ def compareQueryAndPlace(place_db, place_google, query):
             if samePlace:
                 break
     return samePlace
-
+# compare 100 m. 
 def comparePlace(lat1, lng1, lat2, lng2):
     newport_ri = (Decimal(format(lat1, ".6f")), Decimal(format(lng1, ".6f")))
     cleveland_oh = (Decimal(format(lat2, ".6f")), Decimal(format(lng2, ".6f")))
     acceptRadius = great_circle(newport_ri, cleveland_oh).miles
-    if acceptRadius <= 0.4:
+    if acceptRadius <= 0.0621371192:
         return True
     else:
         return False

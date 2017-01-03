@@ -2,8 +2,14 @@ from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.sql import Row
 from ..repository import TwitterRepository
+from ..repository import SocialDataRepository
 import os
 import json
+import googlemaps
+import json
+from geopy.distance import great_circle
+from decimal import Decimal
+
 
 spark = SparkSession\
     .builder\
@@ -39,10 +45,18 @@ sc = spark.sparkContext
 # df = spark.read.json(os.path.dirname(__file__), '../../tweet_backup.json')
 # print(df.count())
 
-queryDF = spark.read.parquet("./SocialDataRepository/QUERY.parquet")
-placeDF = spark.read.parquet("./SocialDataRepository/PLACE.parquet")
-test = queryDF.join(placeDF, queryDF.place_id == placeDF.id, 'outer')
-
-queryDF.show()
-placeDF.show()
+# queryDF = spark.read.parquet("./SocialDataRepository/QUERY.parquet")
+# placeDF = spark.read.parquet("./SocialDataRepository/PLACE.parquet")
+# test = queryDF.join(placeDF, queryDF.place_id == placeDF.id, 'outer')
+#
+# queryDF.show()
+# placeDF.show()
 # print "query: " + test.keyword + " place: " + test.name
+
+gmaps = googlemaps.Client(key='AIzaSyA0_9hFyqLO5uV5pWQUSGL0g5MmtsXwNj4')
+places = gmaps.places(query="kmitl")
+# print places['results']
+for place in places['results']:
+    place = json.loads(json.dumps(place, ensure_ascii=False))
+    print SocialDataRepository.comparePlace(place['geometry']['location']['lat'], place['geometry']['location']['lng'], 13.734760, 100.777690)
+    

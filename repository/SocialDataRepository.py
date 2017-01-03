@@ -2,7 +2,7 @@
 from pyspark import SparkContext
 from pyspark.sql import *
 from pandas.io.json import json_normalize
-from geopy.distance import vincenty
+from geopy.distance import great_circle
 from decimal import Decimal
 import dateutil.parser as date
 import uuid
@@ -106,18 +106,22 @@ def createPlaceSchema(place):
 def compareQueryAndPlace(place_db, place_google, query):
     geolo_db = place_db['geolocation'].split(",")
     samePlace = False
-    print("query: " + query)
-    print("place: " + place_db['name'])
     if place_google != None:
         for place in place_google:
             place = json.loads(json.dumps(place, ensure_ascii=False))
-            newport_ri = (Decimal(format(place['geometry']['location']['lat'], ".6f")), Decimal(format(place['geometry']['location']['lng'], ".6f")))
-            cleveland_oh = (Decimal(geolo_db[0]), Decimal(geolo_db[1]))
-            acceptRadius = vincenty(newport_ri, cleveland_oh).miles
-            if acceptRadius <= 0.4:
-                samePlace = True
+            samePlace = comparePlace(place['geometry']['location']['lat'], place['geometry']['location']['lng'], geolo_db[0], geolo_db[1])
+            if samePlace:
                 break
     return samePlace
+
+def comparePlace(lat1, lng1, lat2, lng2):
+    newport_ri = (Decimal(format(lat1, ".6f")), Decimal(format(lng1, ".6f")))
+    cleveland_oh = (Decimal(format(lat2, ".6f")), Decimal(format(lng2, ".6f")))
+    acceptRadius = great_circle(newport_ri, cleveland_oh).miles
+    if acceptRadius <= 0.4:
+        return True
+    else:
+        return False
 
 def getPlacesFromGoogle(name):
     gmaps = googlemaps.Client(key='AIzaSyB8wgqC986H29FW0TTXRYJNwJLuIKVqVo0', retry_timeout=15)

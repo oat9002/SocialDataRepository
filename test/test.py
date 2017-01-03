@@ -40,7 +40,9 @@ sc = spark.sparkContext
 # print(df.count())
 
 queryDF = spark.read.parquet("./SocialDataRepository/QUERY.parquet")
-print queryDF.collect()
-print queryDF.count()
+placeDF = spark.read.parquet("./SocialDataRepository/PLACE.parquet")
+test = queryDF.join(placeDF, queryDF.place_id == placeDF.id, 'outer')
 
-
+queryDF.show()
+placeDF.show()
+# print "query: " + test.keyword + " place: " + test.name

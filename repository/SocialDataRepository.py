@@ -98,11 +98,8 @@ def compareQueryAndPlace(place_db, place_google, query):
             place = json.loads(json.dumps(place, ensure_ascii=False))
             newport_ri = (Decimal(format(place['geometry']['location']['lat'], ".6f")), Decimal(format(place['geometry']['location']['lng'], ".6f")))
             cleveland_oh = (Decimal(geolo_db[0]), Decimal(geolo_db[1]))
-            # print("map: ", Decimal(format(place['geometry']['location']['lat'], ".6f")), ", ", Decimal(format(place['geometry']['location']['lng'], ".6f")))
-            # print("ori: ", Decimal(geolo_db[0]), ", ", Decimal(geolo_db[1]))
             acceptRadius = vincenty(newport_ri, cleveland_oh).miles
-            print("acceptRadius: ", acceptRadius)
-            if acceptRadius <= 0.3:
+            if acceptRadius <= 0.4:
                 samePlace = True
                 break
     return samePlace

@@ -2,7 +2,7 @@
 from pyspark import SparkContext
 from pyspark.sql import *
 from pandas.io.json import json_normalize
-from geopy.distance import great_circle
+from geopy.distance import vincenty
 from decimal import Decimal
 import dateutil.parser as date
 import uuid
@@ -26,16 +26,16 @@ def saveTweet(data):
     SocialDataNormalize("twitter", twitter)
 
 def SocialDataNormalize(type, data):
+    socialDataArr = []
     if type == "twitter":
         socialDataParquet = "SOCIALDATA.parquet"
         socialDataBaseDF = spark.read.parquet(socialDataParquet)
-        socialDataArr = []
         for tweet in data['tweets']:
             normalizedData = createSocialDataSchema("twitter", tweet)
             socialDataArr.append(normalizedData)
-        socialDataRDD = sc.parallelize(socialDataArr)
-        socialDataDF = spark.read.json(socialDataRDD)
-        socialDataDF.write.mode("append").parquet(socialDataParquet)
+    socialDataRDD = sc.parallelize(socialDataArr)
+    socialDataDF = spark.createDataFrame(socialDataRDD)
+    socialDataDF.write.mode("append").parquet(socialDataParquet)
 
 def createSocialDataSchema(type, data):
     if type == "twitter":
@@ -58,7 +58,7 @@ def saveQuery(query):
     existQuery = queryBaseDF.where(queryBaseDF.keyword == query['keyword']).select(queryBaseDF.id)
     if existQuery.count() == 0:
         queryRDD = sc.parallelize([createQuerySchema(query)])
-        queryDF = spark.read.json(queryRDD)
+        queryDF = spark.createDataFrame(queryRDD)
         queryDF.write.mode("append").parquet(queryParquet)
 
 def createQuerySchema(query, place_id):
@@ -78,7 +78,7 @@ def savePlace(place):
     existPlace = placeBaseDF.where(placeBaseDF.id == place['id']).select(placeBaseDF.id)
     if existPlace.count() == 0:
         placeRDD = sc.parallelize([createPlaceSchema(place)])
-        placeDF = spark.read.json(placeRDD)
+        placeDF = spark.createDataFrame(placeRDD)
         placeDF.write.mode("append").parquet(placeParquet)
 
 def createPlaceSchema(place):
@@ -88,22 +88,32 @@ def createPlaceSchema(place):
     newPlace['geolocation'] = place['geolocation']
     return newPlace
 
-def compareQueryAndPlace(place_db, query):
-    gmaps = googlemaps.Client(key='AIzaSyA0_9hFyqLO5uV5pWQUSGL0g5MmtsXwNj4')
-    places = gmaps.places(query=query)
+def compareQueryAndPlace(place_db, place_google, query):
     geolo_db = place_db['geolocation'].split(",")
     samePlace = False
-    for place in places:
-        place = json.loads(json.dumps(place, ensure_ascii=False))
-        newport_ri = (Decimal(place['geometry']['lat']), Decimal(place['geometry']['lng']))
-        cleveland_oh = (Decimal(geolo_db[0]), Decimal(geolo_db[1]))
-        acceptRadius = great_circle(newport_ri, cleveland_oh).meters
-        if acceptRadius <= 0.3:
-            samePlace = True
-            break
+    print("query: " + query)
+    print("place: " + place_db['name'])
+    if place_google != None:
+        for place in place_google:
+            place = json.loads(json.dumps(place, ensure_ascii=False))
+            newport_ri = (Decimal(format(place['geometry']['location']['lat'], ".6f")), Decimal(format(place['geometry']['location']['lng'], ".6f")))
+            cleveland_oh = (Decimal(geolo_db[0]), Decimal(geolo_db[1]))
+            # print("map: ", Decimal(format(place['geometry']['location']['lat'], ".6f")), ", ", Decimal(format(place['geometry']['location']['lng'], ".6f")))
+            # print("ori: ", Decimal(geolo_db[0]), ", ", Decimal(geolo_db[1]))
+            acceptRadius = vincenty(newport_ri, cleveland_oh).miles
+            print("acceptRadius: ", acceptRadius)
+            if acceptRadius <= 0.3:
+                samePlace = True
+                break
     return samePlace
-        
 
+def getPlacesFromGoogle(name):
+    gmaps = googlemaps.Client(key='AIzaSyB8wgqC986H29FW0TTXRYJNwJLuIKVqVo0', retry_timeout=15)
+    places = gmaps.places(query=name)
+    if places['status'] == "OK":
+        return places['results']
+    else:
+        return None
 #########################################################################################################
 
 # #TweetLocationSearch table
@@ -120,7 +130,7 @@ def compareQueryAndPlace(place_db, query):
 #             return row['id']
 #         if !existLocation:
 #             newLocationRDD = sc.parallelize([createTweetLocationSearchSchema(location)])
-#             newLocationDF = spark.read.json(newLocationRDD)
+#             newLocationDF = spark.createDataFrame(newLocationRDD)
 #             newLocation.write.mode("append").parquet(tweetLocationSearchParquet)
 #             return newLocation['id']
 #

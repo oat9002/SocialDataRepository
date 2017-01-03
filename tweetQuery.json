@@ -1,7 +1,10 @@
 {
   "queries" : [
-              {"keyword":"#kmitl"},
+              {"keyword":"สยามพารากอน"},
               {"keyword":"เดอะมอลล์บางกะปิ"},
-              {"keyword":"kmitl"}
+              {"keyword":"kmitl"},
+              {"keyword":"ซีคอนสแควร์"},
+              {"keyword":"ตลาดรถไฟศรีนครินทร์"},
+              {"keyword":"สุวรรณภูมิ"}
             ]
 }

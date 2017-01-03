@@ -23,17 +23,24 @@ sc = spark.sparkContext
 # tweetDF = spark.read.parquet("./SocialDataRepository/TW_TWEET.parquet")
 # print tweetDF.toJSON().first()
 # print tweetDF.count()
-path = os.path.join(os.path.dirname(__file__), '../tweet.json')
-print(path)
-with open(path) as json_data:
-    tweetJson = json.load(json_data)
-    TwitterRepository.saveRawTweet(tweetJson)
-with open("./SocialDataRepository/TW_TWEET_BACKUP.json", 'r') as test:
-    json = [json.loads(line) for line in test]
-    print("total backup: ", len(json))
-    print(json[len(json) - 1])
+
+# path = os.path.join(os.path.dirname(__file__), '../tweet.json')
+# print(path)
+# with open(path) as json_data:
+#     tweetJson = json.load(json_data)
+#     TwitterRepository.saveRawTweet(tweetJson)
+# with open("./SocialDataRepository/TW_TWEET_BACKUP.json", 'r') as test:
+#     json = [json.loads(line) for line in test]
+#     print("total backup: ", len(json))
+#     print(json[len(json) - 1])
 # with open(path, 'r') as test:
 #     json = json.load(test)
 #     print(len(json))
 # df = spark.read.json(os.path.dirname(__file__), '../../tweet_backup.json')
 # print(df.count())
+
+queryDF = spark.read.parquet("./SocialDataRepository/QUERY.parquet")
+print queryDF.collect()
+print queryDF.count()
+
+

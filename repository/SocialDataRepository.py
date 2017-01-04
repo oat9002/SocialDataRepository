@@ -30,6 +30,8 @@ def saveTweet(data):
 
 #foursquare
 def addFQVenue(venue):
+    # venue['']
+    # savePlace()
 
 
 #SOCIALDATA##################################
@@ -96,11 +98,18 @@ def createQuerySchema(query, place_id):
 def savePlace(place):
     placeParquet = "PLACE.parquet"
     placeBaseDF = spark.read.parquet(placeParquet)
-    existPlace = placeBaseDF.where(placeBaseDF.id == place['id']).select(placeBaseDF.id)
-    if existPlace.count() == 0:
-        placeRDD = sc.parallelize([createPlaceSchema(place)])
-        placeDF = spark.createDataFrame(placeRDD)
-        placeDF.write.mode("append").parquet(placeParquet)
+    placeLL = place['geolocation']
+    #compare ll from all row
+    allPlace = placeBaseDF.collect()
+    for existPlace in allPlace:
+        existLL = existPlace['geolocation'].split(",")
+        if comparePlace(existLL[0],existLL[1],place[0],place[1])
+            return existPlace['id']
+    newPlace = createPlaceSchema(place)
+    placeRDD = sc.parallelize([newPlace])
+    placeDF = spark.createDataFrame(placeRDD)
+    placeDF.write.mode("append").parquet(placeParquet)
+    return newPlace['id']
 
 def createPlaceSchema(place):
     newPlace = {}
@@ -136,6 +145,7 @@ def getPlacesFromGoogle(name):
         return places['results']
     else:
         return None
+
 #########################################################################################################
 
 # #TweetLocationSearch table

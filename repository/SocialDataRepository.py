@@ -32,19 +32,23 @@ def saveTweet(data):
 #foursquare
 def addFQVenue(venue):
     place = {}
-    place['name'] = venue['name']
+    place['keyword'] = venue['name']
     place['geolocation'] = str(venue['location']['lat'])+','+str(venue['location']['lng'])
+    queryId = addPlaceOrQuery(place)
+
+def addPlaceOrQuery(newPlace):
+    #if no field 'geolocation'
+    if not 'geolocation' in newPlace:
+        return None #deletethis
+        #search for coordinate 
+    place = {}
+    place['name'] = newPlace['keyword']
+    place['geolocation'] = newPlace['geolocation']
     placeid = savePlace(place)
-    print(placeid)
     query = {}
-    query['keyword'] = venue['name']
+    query['keyword'] = newPlace['keyword']
     queryid = saveQuery(query,placeid)
-    print(queryid)
-
-# def addPlaceOrQuery():
-
-
-
+    return queryid
 
 # old from saveQuery
 #     placeParquet = "PLACE.parquet"

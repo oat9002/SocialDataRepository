@@ -34,3 +34,7 @@ else:
     SocialDataRepository.addFQVenue(venue)
     parquetFile = spark.read.parquet("PLACE.parquet")
     parquetFile.show()
+
+ex ={}
+ex['keyword'] = "abc"
+print(SocialDataRepository.addPlaceOrQuery(ex))

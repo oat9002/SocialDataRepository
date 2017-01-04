@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
+import sys
+sys.path.append('../service')
 from pyspark import SparkContext
 from pyspark.sql import *
-from pandas.io.json import json_normalize
+from SocialDataService import writeParquet
 from geopy.distance import great_circle
 import dateutil.parser as date
 import uuid
 import json
 import os
+
 
 
 spark = SparkSession\
@@ -19,20 +22,25 @@ sc = spark.sparkContext
 #TW_TWEET table
 def saveTweet(tweets, queryId): #queryId is packed with Tweet Data
     tweetParquet = "TW_TWEET.parquet"
-    tweetBaseDF = spark.read.parquet(tweetParquet)
     tweetArr = []
-    tweetArrBackup = []
-    for tweet in tweets:
-        existTweet = tweetBaseDF.where(tweetBaseDF.id == tweet['id'])
-        if existTweet.count() == 0:
+    if path.exists(tweetParquet):  
+        tweetBaseDF = spark.read.parquet(tweetParquet)
+        tweetArrBackup = []
+        for tweet in tweets:
+            existTweet = tweetBaseDF.where(tweetBaseDF.id == tweet['id'])
+            if existTweet.count() == 0:
+                tweetArr.append(selectTweetCol(tweet, queryId))
+                saveUserFromTweet(tweet['user'])
+                tweetArrBackup.append(tweet)
+        saveRawTweet(tweetArrBackup)
+    else:
+        for tweet in tweets:
             tweetArr.append(selectTweetCol(tweet, queryId))
             saveUserFromTweet(tweet['user'])
-            tweetArrBackup.append(tweet)
-    tweetRDD = sc.parallelize(tweetArr)
-    tweetDF = spark.createDataFrame(tweetRDD)
-    tweetDF.write.mode("append").parquet(tweetParquet)
-    saveRawTweet(tweetArrBackup)
+        saveRawTweet(tweets)
+    writeParquet(tweetParquet, tweetArr)
     return tweetArr #for saving to Social table
+
 
 def selectTweetCol(tweet, queryId):
     newTweet = {}
@@ -74,6 +82,7 @@ def saveRawTweet(tweets):
 #User table
 def saveUserFromTweet(user):
     userParquet = "TW_USER.parquet"
+    
     userBaseDF = spark.read.parquet(userParquet)
     existUser = userBaseDF.where(userBaseDF.id == user['id'])
     if existUser.count() == 0:

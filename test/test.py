@@ -1,8 +1,10 @@
+import sys
+sys.path.append('../repository')
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.sql import Row
-from ..repository import TwitterRepository
-from ..repository import SocialDataRepository
+import TwitterRepository
+import SocialDataRepository
 import os
 import json
 import googlemaps
@@ -46,17 +48,26 @@ sc = spark.sparkContext
 # print(df.count())
 
 # queryDF = spark.read.parquet("./SocialDataRepository/QUERY.parquet")
-# placeDF = spark.read.parquet("./SocialDataRepository/PLACE.parquet")
+placeDF = spark.read.parquet("../PLACE.parquet")
+placeDF.show()
 # test = queryDF.join(placeDF, queryDF.place_id == placeDF.id, 'outer')
 #
 # queryDF.show()
 # placeDF.show()
 # print "query: " + test.keyword + " place: " + test.name
 
-gmaps = googlemaps.Client(key='AIzaSyA0_9hFyqLO5uV5pWQUSGL0g5MmtsXwNj4')
-places = gmaps.places(query="kmitl")
+# gmaps = googlemaps.Client(key='AIzaSyA0_9hFyqLO5uV5pWQUSGL0g5MmtsXwNj4')
+# places = gmaps.places(query="kmitl")
 # print places['results']
-for place in places['results']:
-    place = json.loads(json.dumps(place, ensure_ascii=False))
-    print SocialDataRepository.comparePlace(place['geometry']['location']['lat'], place['geometry']['location']['lng'], 13.734760, 100.777690)
-    
+# for place in places['results']:
+#     place = json.loads(json.dumps(place, ensure_ascii=False))
+#     print SocialDataRepository.comparePlace(place['geometry']['location']['lat'], place['geometry']['location']['lng'], 13.734760, 100.777690)
+
+#test sort Twitter
+tweetDF = spark.read.parquet("../TW_TWEET.parquet")
+test = tweetDF.sort(tweetDF.created_at.desc()).limit(10)
+test.show()
+
+
+
+

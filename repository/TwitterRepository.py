@@ -3,13 +3,11 @@ import sys
 sys.path.append('../service')
 from pyspark import SparkContext
 from pyspark.sql import *
-from SocialDataService import writeParquet
+from service.SocialDataService import writeParquet
 from geopy.distance import great_circle
 import dateutil.parser as date
 import uuid
 import json
-import os
-
 
 
 spark = SparkSession\
@@ -82,13 +80,13 @@ def saveRawTweet(tweets):
 #User table
 def saveUserFromTweet(user):
     userParquet = "TW_USER.parquet"
-    
-    userBaseDF = spark.read.parquet(userParquet)
-    existUser = userBaseDF.where(userBaseDF.id == user['id'])
-    if existUser.count() == 0:
-        userRDD = sc.parallelize([selectUserCol(user)])
-        userDF = spark.createDataFrame(userRDD)
-        userDF.write.mode("append").parquet(userParquet)
+    if path.exists(userParquet): 
+        userBaseDF = spark.read.parquet(userParquet)
+        existUser = userBaseDF.where(userBaseDF.id == user['id'])
+        if existUser.count() == 0:
+            writeParquet(userParquet, [selectUserCol(user)])
+    else:
+        writeParquet(userParquet, [selectUserCol(user)])
 
 def selectUserCol(user):
     newUser = {}

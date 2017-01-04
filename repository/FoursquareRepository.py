@@ -51,7 +51,7 @@ def saveCheckin(checkin,venueId):
 def selectCheckinCol(checkin,venueId):
     newCheckin = {}
     newCheckin['id'] = str(uuid.uuid4())
-    newCheckin['datetime'] = datetime.datetime.now().isoformat() 
+    newCheckin['created_at'] = datetime.datetime.now().isoformat() 
     newCheckin['count'] = checkin['count']
     newCheckin['venueid'] = venueId
     return newCheckin
@@ -75,7 +75,7 @@ def saveTip(tips,venueId):
 def selectTipCol(tip,venueId):
     newTip = {}
     newTip['tipid'] = tip['id']
-    newTip['datetime'] =  datetime.datetime.fromtimestamp(tip['createdAt']).isoformat()
+    newTip['created_at'] =  datetime.datetime.fromtimestamp(tip['createdAt']).isoformat()
     newTip['message'] = tip['text']
     newTip['venueid'] = venueId
     newTip['userid'] = tip['user']['id']
@@ -118,7 +118,7 @@ def savePhoto(photos,venueId):
 def selectPhotoCol(photo,venueId):
     newPhoto = {}
     newPhoto['photoid'] = photo['id']
-    newPhoto['datetime'] =  datetime.datetime.fromtimestamp(photo['createdAt']).isoformat()
+    newPhoto['created_at'] =  datetime.datetime.fromtimestamp(photo['createdAt']).isoformat()
     newPhoto['photo'] = photo['prefix']+photo['suffix']
     newPhoto['venueid'] = venueId
     newPhoto['userid'] = photo['user']['id']

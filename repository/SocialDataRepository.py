@@ -7,6 +7,8 @@ from decimal import Decimal
 import dateutil.parser as date
 import uuid
 import TwitterRepository
+import FoursquareRepository
+import FacebookRepository
 import googlemaps
 import json
 
@@ -18,6 +20,7 @@ spark = SparkSession\
 
 sc = spark.sparkContext
 
+#Twitter
 def saveTweet(data):
     filteredTweet = TwitterRepository.saveTweet(data['tweets'], data['query']['id'])
     twitter = {}
@@ -25,6 +28,11 @@ def saveTweet(data):
     twitter['query'] = data['query']
     SocialDataNormalize("twitter", twitter)
 
+#foursquare
+def addFQVenue(venue):
+
+
+#SOCIALDATA##################################
 def SocialDataNormalize(type, data):
     socialDataArr = []
     if type == "twitter":
@@ -51,7 +59,7 @@ def createSocialDataSchema(type, data):
         newData['source_id'] = data['id']
         return newData
 
-#Query table
+#Query table#########################################
 def saveQuery(query):
     queryParquet = "QUERY.parquet"
     queryBaseDF = spark.read.parquet(queryParquet)
@@ -84,9 +92,7 @@ def createQuerySchema(query, place_id):
     querySchema['place_id'] = place_id
     return querySchema
 
-#########################################################################################################
-
-#Place table
+#Place table###############################################
 def savePlace(place):
     placeParquet = "PLACE.parquet"
     placeBaseDF = spark.read.parquet(placeParquet)

@@ -59,7 +59,7 @@ def savePost(posts,pageId):
 def selectPostCol(post,pageId):
     newPost = {}
     newPost['postid'] = post['id']
-    newPost['datetime'] = post['created_time']
+    newPost['created_at'] = post['created_time']
     if 'message' in post:
         newPost['message'] = post['message']
     newPost['pageid'] = pageId  
@@ -84,7 +84,7 @@ def saveComment(comments,postId):
 def selectCommentCol(comment,postId):
     newComment = {}
     newComment['commentid'] = comment['id']
-    newComment['datetime'] = comment['created_time']
+    newComment['created_at'] = comment['created_time']
     if 'message' in comment:
         newComment['message'] = comment['message']
     newComment['postid'] = postId  

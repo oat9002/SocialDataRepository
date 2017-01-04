@@ -22,7 +22,7 @@ sc = spark.sparkContext
 
 # print(SocialDataRepository.comparePlace("13.72767543677477","13.72767543677477","13.72767543677477","13.72767543677477"))
 
-venueId = "529733a8498ef27b02c2209d"
+venueId = "4bea24b59fa3ef3bc91a80c9"
 
 resp = requests.get('http://localhost:6003/foursquare/detail?venue_id='+venueId)
 if resp.status_code != 200:

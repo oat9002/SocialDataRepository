@@ -32,16 +32,25 @@ def saveTweet(data):
 #foursquare
 def addFQVenue(venue):
     place = {}
-    place['name'] = venue['name']
+    place['keyword'] = venue['name']
     place['geolocation'] = str(venue['location']['lat'])+','+str(venue['location']['lng'])
-    placeid = savePlace(place)
-    print(placeid)
-    # query = {}
-    # query['keyword'] = venue['name']
-    # queryid = saveQuery(query,placeid)
-    # print(queryid)
+    queryId = addPlaceOrQuery(place)
 
-# def addPlaceOrQuery():
+def addPlaceOrQuery(newPlace):
+    #if no field 'geolocation'
+    if not 'geolocation' in newPlace:
+        return None #deletethis
+        #search for coordinate 
+    place = {}
+    place['name'] = newPlace['keyword']
+    place['geolocation'] = newPlace['geolocation']
+    placeid = savePlace(place)
+    query = {}
+    query['keyword'] = newPlace['keyword']
+    queryid = saveQuery(query,placeid)
+    return queryid
+
+# old from saveQuery
 #     placeParquet = "PLACE.parquet"
 #             placeDF = spark.read.parquet(placeParquet)
 #             places = placeDF.select(placeDF.id, placeDF.geolocation).collect()
@@ -95,14 +104,13 @@ def saveQuery(query,place_id):
         queryBaseDF = spark.read.parquet(queryParquet)
         existQuery = queryBaseDF.where(queryBaseDF.keyword == query['keyword'])
         if existQuery.count() >0:
-            return existQuery['id']
+            return existQuery.first().id
     newQuery = createQuerySchema(query,place_id)
     print(newQuery)
     queryRDD = sc.parallelize([newQuery])
     queryDF = spark.createDataFrame(queryRDD)
-    # queryDF.show()
-    # queryDF.write.mode("append").parquet(queryParquet)
-    # return newQuery['id']
+    queryDF.write.mode("append").parquet(queryParquet)
+    return newQuery['id']
 
 def createQuerySchema(query, place_id):
     newQuery = {}

@@ -35,7 +35,11 @@ def addFQVenue(venue):
     place['name'] = venue['name']
     place['geolocation'] = str(venue['location']['lat'])+','+str(venue['location']['lng'])
     placeid = savePlace(place)
-    query = {}
+    print(placeid)
+    # query = {}
+    # query['keyword'] = venue['name']
+    # queryid = saveQuery(query,placeid)
+    # print(queryid)
 
 # def addPlaceOrQuery():
 #     placeParquet = "PLACE.parquet"
@@ -87,16 +91,18 @@ def createSocialDataSchema(type, data):
 #Query table#########################################
 def saveQuery(query,place_id):
     queryParquet = "QUERY.parquet"
-    if path.exists(placeParquet): 
+    if path.exists(queryParquet): 
         queryBaseDF = spark.read.parquet(queryParquet)
         existQuery = queryBaseDF.where(queryBaseDF.keyword == query['keyword'])
         if existQuery.count() >0:
             return existQuery['id']
-    newQuery = qcreateQuerySchema(query,place_id)
+    newQuery = createQuerySchema(query,place_id)
+    print(newQuery)
     queryRDD = sc.parallelize([newQuery])
     queryDF = spark.createDataFrame(queryRDD)
-    queryDF.write.mode("append").parquet(queryParquet)
-    return newQuery['id']
+    # queryDF.show()
+    # queryDF.write.mode("append").parquet(queryParquet)
+    # return newQuery['id']
 
 def createQuerySchema(query, place_id):
     newQuery = {}

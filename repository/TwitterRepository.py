@@ -3,7 +3,7 @@ import sys
 sys.path.append('../service')
 from pyspark import SparkContext
 from pyspark.sql import *
-from SocialDataService import writeParquet
+from service.SocialDataService import writeParquet
 from geopy.distance import great_circle
 import dateutil.parser as date
 import uuid

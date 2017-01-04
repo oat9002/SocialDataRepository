@@ -11,6 +11,7 @@ import FoursquareRepository
 import FacebookRepository
 import googlemaps
 import json
+import os.path as path
 
 
 spark = SparkSession\
@@ -30,9 +31,31 @@ def saveTweet(data):
 
 #foursquare
 def addFQVenue(venue):
-    # venue['']
-    # savePlace()
+    place = {}
+    place['name'] = venue['name']
+    place['geolocation'] = str(venue['location']['lat'])+','+str(venue['location']['lng'])
+    placeid = savePlace(place)
+    query = {}
 
+# def addPlaceOrQuery():
+#     placeParquet = "PLACE.parquet"
+#             placeDF = spark.read.parquet(placeParquet)
+#             places = placeDF.select(placeDF.id, placeDF.geolocation).collect()
+#             samePlace = False
+#             placeGoogle = getPlacesFromGoogle(query['keyword'])
+#             place_id = ""
+#             for place in places:
+#                 samePlace = compareQueryAndPlace(place, placeGoogle, query['keyword'])
+#                 if samePlace:
+#                     place_id = place['id']
+#                     break
+#             if samePlace:
+#                 queries.append(createQuerySchema(query, place_id))
+#             else:
+#                 queries.append(createQuerySchema(query, None))
+#             queryRDD = sc.parallelize([createQuerySchema(query)])
+#             queryDF = spark.createDataFrame(queryRDD)
+#             queryDF.write.mode("append").parquet(
 
 #SOCIALDATA##################################
 def SocialDataNormalize(type, data):
@@ -62,53 +85,42 @@ def createSocialDataSchema(type, data):
         return newData
 
 #Query table#########################################
-def saveQuery(query):
+def saveQuery(query,place_id):
     queryParquet = "QUERY.parquet"
-    queryBaseDF = spark.read.parquet(queryParquet)
-    existQuery = queryBaseDF.where(queryBaseDF.keyword == query['keyword']).select(queryBaseDF.id)
-    if existQuery.count() == 0:
-        placeParquet = "PLACE.parquet"
-        placeDF = spark.read.parquet(placeParquet)
-        places = placeDF.select(placeDF.id, placeDF.geolocation).collect()
-        samePlace = False
-        placeGoogle = getPlacesFromGoogle(query['keyword'])
-        place_id = ""
-        for place in places:
-            samePlace = compareQueryAndPlace(place, placeGoogle, query['keyword'])
-            if samePlace:
-                place_id = place['id']
-                break
-        if samePlace:
-            queries.append(createQuerySchema(query, place_id))
-        else:
-            queries.append(createQuerySchema(query, None))
-        queryRDD = sc.parallelize([createQuerySchema(query)])
-        queryDF = spark.createDataFrame(queryRDD)
-        queryDF.write.mode("append").parquet(queryParquet)
+    if path.exists(placeParquet): 
+        queryBaseDF = spark.read.parquet(queryParquet)
+        existQuery = queryBaseDF.where(queryBaseDF.keyword == query['keyword'])
+        if existQuery.count() >0:
+            return existQuery['id']
+    newQuery = qcreateQuerySchema(query,place_id)
+    queryRDD = sc.parallelize([newQuery])
+    queryDF = spark.createDataFrame(queryRDD)
+    queryDF.write.mode("append").parquet(queryParquet)
+    return newQuery['id']
 
 def createQuerySchema(query, place_id):
-    querySchema = {}
-    querySchema['id'] = str(uuid.uuid4())
-    querySchema['keyword'] = query['keyword']
-    querySchema['frequency'] = 0
-    querySchema['place_id'] = place_id
-    return querySchema
+    newQuery = {}
+    newQuery['id'] = str(uuid.uuid4())
+    newQuery['keyword'] = query['keyword']
+    newQuery['frequency'] = 0
+    newQuery['place_id'] = place_id
+    return newQuery
 
 #Place table###############################################
 def savePlace(place):
     placeParquet = "PLACE.parquet"
-    placeBaseDF = spark.read.parquet(placeParquet)
-    placeLL = place['geolocation']
-    #compare ll from all row
-    allPlace = placeBaseDF.collect()
-    for existPlace in allPlace:
-        existLL = existPlace['geolocation'].split(",")
-        if comparePlace(existLL[0],existLL[1],place[0],place[1])
-            return existPlace['id']
+    if path.exists(placeParquet):   
+        placeBaseDF = spark.read.parquet(placeParquet)
+        placeLL = place['geolocation'].split(",")
+        allPlace = placeBaseDF.collect()
+        for existPlace in allPlace:    
+            existLL = existPlace['geolocation'].split(",")  
+            if comparePlace(existLL[0],existLL[1],placeLL[0],placeLL[1]):
+                return existPlace['id']
     newPlace = createPlaceSchema(place)
     placeRDD = sc.parallelize([newPlace])
     placeDF = spark.createDataFrame(placeRDD)
-    placeDF.write.mode("append").parquet(placeParquet)
+    placeDF.write.mode("append").parquet(placeParquet)  
     return newPlace['id']
 
 def createPlaceSchema(place):
@@ -130,8 +142,8 @@ def compareQueryAndPlace(place_db, place_google, query):
     return samePlace
 # compare 100 m. 
 def comparePlace(lat1, lng1, lat2, lng2):
-    newport_ri = (Decimal(format(lat1, ".6f")), Decimal(format(lng1, ".6f")))
-    cleveland_oh = (Decimal(format(lat2, ".6f")), Decimal(format(lng2, ".6f")))
+    newport_ri = (Decimal(lat1), Decimal(lng1))
+    cleveland_oh = (Decimal(lat2), Decimal(lng2))
     acceptRadius = great_circle(newport_ri, cleveland_oh).miles
     if acceptRadius <= 0.0621371192:
         return True

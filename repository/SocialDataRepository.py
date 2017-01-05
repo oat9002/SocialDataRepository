@@ -30,11 +30,13 @@ def saveTweet(data):
     SocialDataNormalize("twitter", twitter)
 
 #foursquare
-def addFQVenue(venue):
+def addFQVenue(data):
+    venue = data['response']['venue']
     place = {}
     place['keyword'] = venue['name']
     place['geolocation'] = str(venue['location']['lat'])+','+str(venue['location']['lng'])
     queryId = addPlaceOrQuery(place)
+    FoursquareRepository.saveVenue(venue,queryId)
 
 def addPlaceOrQuery(newPlace):
     #if no field 'geolocation'

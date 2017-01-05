@@ -37,6 +37,11 @@ def addFQVenue(data):
     place['geolocation'] = str(venue['location']['lat'])+','+str(venue['location']['lng'])
     queryId = addPlaceOrQuery(place)
     FoursquareRepository.saveVenue(venue,queryId)
+    FoursquareRepository.saveCategory(venue['categories'])
+
+# def addFQ
+
+#SOCIALDATA##################################
 
 def addPlaceOrQuery(newPlace):
     #if no field 'geolocation'
@@ -89,7 +94,7 @@ def addPlaceOrQuery(newPlace):
 #             queryDF = spark.createDataFrame(queryRDD)
 #             queryDF.write.mode("append").parquet(
 
-#SOCIALDATA##################################
+
 def SocialDataNormalize(type, data):
     socialDataArr = []
     if type == "twitter":

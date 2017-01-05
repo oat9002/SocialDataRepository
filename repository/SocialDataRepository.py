@@ -41,16 +41,33 @@ def addFQVenue(data):
 def addPlaceOrQuery(newPlace):
     #if no field 'geolocation'
     if not 'geolocation' in newPlace:
-        return None #deletethis
         #search for coordinate 
-    place = {}
-    place['name'] = newPlace['keyword']
-    place['geolocation'] = newPlace['geolocation']
-    placeid = savePlace(place)
-    query = {}
-    query['keyword'] = newPlace['keyword']
-    queryid = saveQuery(query,placeid)
-    return queryid
+        placeGoogle = getPlacesFromGoogle(newPlace['keyword'])
+        if placeGoogle != None:
+            placeParquet = "PLACE.parquet"
+            placeDF = spark.read.parquet(placeParquet)
+            places = placeDF.select(placeDF.id, placeDF.geolocation).collect()
+            samePlace = False
+            for place in places:
+                 samePlace = compareQueryAndPlace(place, placeGoogle, newPlace['keyword'])
+                if samePlace:
+                    query = {}
+                    query['keyword'] = newPlace['keyword']
+                    queryid = saveQuery(query,  place['id'])
+                    return queryid
+            if not samePlace:
+                return None #Fixed here
+        else:
+            return None #Fixed here
+    else:        
+        place = {}
+        place['name'] = newPlace['keyword']
+        place['geolocation'] = newPlace['geolocation']
+        placeid = savePlace(place)
+        query = {}
+        query['keyword'] = newPlace['keyword']
+        queryid = saveQuery(query,placeid)
+        return queryid
 
 # old from saveQuery
 #     placeParquet = "PLACE.parquet"
@@ -105,7 +122,7 @@ def saveQuery(query,place_id):
     if path.exists(queryParquet): 
         queryBaseDF = spark.read.parquet(queryParquet)
         existQuery = queryBaseDF.where(queryBaseDF.keyword == query['keyword'])
-        if existQuery.count() >0:
+        if existQuery.count() > 0:
             return existQuery.first().id
     newQuery = createQuerySchema(query,place_id)
     print(newQuery)

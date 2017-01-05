@@ -8,7 +8,6 @@ import SocialDataRepository
 import os
 import json
 import googlemaps
-import json
 from geopy.distance import great_circle
 from decimal import Decimal
 
@@ -64,9 +63,13 @@ placeDF.show()
 #     print SocialDataRepository.comparePlace(place['geometry']['location']['lat'], place['geometry']['location']['lng'], 13.734760, 100.777690)
 
 #test sort Twitter
-tweetDF = spark.read.parquet("../TW_TWEET.parquet")
-test = tweetDF.sort(tweetDF.created_at.desc()).limit(10)
-test.show()
+# path = os.path.join(os.path.dirname(__file__), '../tweet.json')
+# print(path)
+# with open(path) as json_data:
+#     json = json.load(json_data)
+# tweetDF = spark.read.parquet("../TW_TWEET.parquet")
+# test = tweetDF.sort(tweetDF.created_at.desc()).limit(10)
+# test.show()
 
 
 

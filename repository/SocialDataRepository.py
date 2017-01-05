@@ -31,7 +31,7 @@ def saveTweet(data):
 
 #foursquare
 def addFQVenue(data):
-    venue = data['response']['venue']
+    venue = data['venue']
     place = {}
     place['keyword'] = venue['name']
     place['geolocation'] = str(venue['location']['lat'])+','+str(venue['location']['lng'])
@@ -39,7 +39,25 @@ def addFQVenue(data):
     FoursquareRepository.saveVenue(venue,queryId)
     FoursquareRepository.saveCategory(venue['categories'])
 
-# def addFQ
+def addFQCheckin(data):
+    checkin = data['hereNow']
+    venueId = data['venueId']
+    FoursquareRepository.saveCheckin(checkin,venueId)
+
+def addFQTips(data):
+    tips = data['tips']
+    venueId = data['venueId']    
+    FoursquareRepository.saveTips(tips,venueId)
+    for tip in tips['items']:
+        FoursquareRepository.saveUser(tip['user'])
+
+def addFQPhotos(data):
+    photos = data['photos']
+    venueId = data['venueId']    
+    FoursquareRepository.savePhotos(photos,venueId)
+    for photo in photos['items']:
+        FoursquareRepository.saveUser(tip['user'])
+        
 
 #SOCIALDATA##################################
 

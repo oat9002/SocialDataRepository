@@ -26,5 +26,25 @@ def readTweet():
     TwitterRepository.readTweet()
     return ('', 204)
 
+@app.route("/foursquare/addVenue", methods=['POST'])
+def addFQVenue():
+    SocialDataRepository.addFQVenue(json.loads(request.get_data()))
+    return ('', 204)
+
+@app.route("/foursquare/addCheckin", methods=['POST'])
+def addFQCheckin():
+    SocialDataRepository.addFQCheckin(json.loads(request.get_data()))
+    return ('', 204)
+
+@app.route("/foursquare/addTips", methods=['POST'])
+def addFQTips():
+    SocialDataRepository.addFQTips(json.loads(request.get_data()))
+    return ('', 204)
+
+@app.route("/foursquare/addPhotos", methods=['POST'])
+def addFQPhotos():
+    SocialDataRepository.addFQPhotos(json.loads(request.get_data()))
+    return ('', 204)
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0')

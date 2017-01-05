@@ -22,18 +22,20 @@ sc = spark.sparkContext
 
 # print(SocialDataRepository.comparePlace("13.72767543677477","13.72767543677477","13.72767543677477","13.72767543677477"))
 
-venueId = "4bea24b59fa3ef3bc91a80c9"
+# venueId = "4b8a56c2f964a520226932e3"
 
-resp = requests.get('http://localhost:6003/foursquare/detail?venue_id='+venueId)
-if resp.status_code != 200:
-    # This means something went wrong.
-    # raise ApiError('GET /tasks/ {}'.format(resp.status_code))
-    print("Request Error code "+resp.status_code)
-else:
-    venue = resp.json()['response']['venue']
-    SocialDataRepository.addFQVenue(venue)
-    parquetFile = spark.read.parquet("PLACE.parquet")
-    parquetFile.show()
+# resp = requests.get('http://localhost:6003/foursquare/detail?venue_id='+venueId)
+# if resp.status_code != 200:
+#     # This means something went wrong.
+#     # raise ApiError('GET /tasks/ {}'.format(resp.status_code))
+#     print("Request Error code "+resp.status_code)
+# else:
+#     venue = resp.json()
+#     SocialDataRepository.addFQVenue(venue)
+parquetFile = spark.read.parquet("FQ_VENUE.parquet")
+parquetFile.where(parquetFile.venueid == "4c2ad1448abca593b450ff1f").show()
+
+    # parquetFile.show()
 
 ex ={}
 ex['keyword'] = "abc"

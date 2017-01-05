@@ -57,7 +57,7 @@ def selectCheckinCol(checkin,venueId):
     return newCheckin
 
 #FQ_TIP####################################
-def saveTip(tips,venueId):
+def saveTips(tips,venueId):
     tipParquet = "FQ_TIP.parquet"
     allTips = []
     if path.exists(tipParquet):     
@@ -100,7 +100,7 @@ def selectUserCol(user):
     return newUser
 
 #FQ_PHOTO####################################
-def savePhoto(photos,venueId):
+def savePhotos(photos,venueId):
     photoParquet = "FQ_PHOTO.parquet"
     allPhoto = []
     if path.exists(photoParquet):     
@@ -140,3 +140,20 @@ def selectCategoryCol(category):
     newCategory['cateid'] = category['id']
     newCategory['name'] = category['name']
     return newCategory
+
+# #FQ_POPULARHOUR####################################
+# def savePopularHour(popular):
+#     hourParquet = "FQ_POPULARHOUR.parquet"
+#     if path.exists(hourParquet):     
+#         categoryBaseDF = spark.read.parquet(hourParquet)
+#         existCategory = categoryBaseDF.where(categoryBaseDF.day == hour[''])
+#         if existCategory.count() == 0:
+#             writeParquet(hourParquet,[selectHourCol(category[0])])
+#     else:
+#         writeParquet(hourParquet,[selectHourCol(category[0])])            
+
+# def selectHourCol(popular):
+#     newCategory = {}
+#     newCategory['cateid'] = category['id']
+#     newCategory['name'] = category['name']
+#     return newCategory

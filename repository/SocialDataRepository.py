@@ -30,11 +30,36 @@ def saveTweet(data):
     SocialDataNormalize("twitter", twitter)
 
 #foursquare
-def addFQVenue(venue):
+def addFQVenue(data):
+    venue = data['venue']
     place = {}
     place['keyword'] = venue['name']
     place['geolocation'] = str(venue['location']['lat'])+','+str(venue['location']['lng'])
     queryId = addPlaceOrQuery(place)
+    FoursquareRepository.saveVenue(venue,queryId)
+    FoursquareRepository.saveCategory(venue['categories'])
+
+def addFQCheckin(data):
+    checkin = data['hereNow']
+    venueId = data['venueId']
+    FoursquareRepository.saveCheckin(checkin,venueId)
+
+def addFQTips(data):
+    tips = data['tips']
+    venueId = data['venueId']    
+    FoursquareRepository.saveTips(tips,venueId)
+    for tip in tips['items']:
+        FoursquareRepository.saveUser(tip['user'])
+
+def addFQPhotos(data):
+    photos = data['photos']
+    venueId = data['venueId']    
+    FoursquareRepository.savePhotos(photos,venueId)
+    for photo in photos['items']:
+        FoursquareRepository.saveUser(tip['user'])
+        
+
+#SOCIALDATA##################################
 
 def addPlaceOrQuery(newPlace):
     #if no field 'geolocation'
@@ -87,7 +112,7 @@ def addPlaceOrQuery(newPlace):
 #             queryDF = spark.createDataFrame(queryRDD)
 #             queryDF.write.mode("append").parquet(
 
-#SOCIALDATA##################################
+
 def SocialDataNormalize(type, data):
     socialDataArr = []
     if type == "twitter":

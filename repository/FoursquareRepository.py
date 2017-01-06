@@ -141,19 +141,34 @@ def selectCategoryCol(category):
     newCategory['name'] = category['name']
     return newCategory
 
-# #FQ_POPULARHOUR####################################
-# def savePopularHour(popular):
+#FQ_POPULARHOUR####################################
+# def savePopularHour(popular,venueId):
 #     hourParquet = "FQ_POPULARHOUR.parquet"
+#     allhour = []
 #     if path.exists(hourParquet):     
 #         categoryBaseDF = spark.read.parquet(hourParquet)
-#         existCategory = categoryBaseDF.where(categoryBaseDF.day == hour[''])
-#         if existCategory.count() == 0:
-#             writeParquet(hourParquet,[selectHourCol(category[0])])
+#         for hours in popular['timeframes']:
+#             for day in hours['days']:
+#                 checkHour = {}
+#                 checkHour['']
+#                 existCategory = categoryBaseDF.where(categoryBaseDF.day == day and categoryBaseDF.venueid == venueId)
+#                 if existCategory.count() == 0:
+#                     for newHour in selectHourCol(hour,venueId)
+#                         allhour.append(newHour)
+#         writeParquet(hourParquet,allhour)
 #     else:
-#         writeParquet(hourParquet,[selectHourCol(category[0])])            
+#         for hour in popular['timeframes']:
+#             for newHour in selectHourCol(hour,venueId)
+#                     allhour.append(newHour)    
+#         writeParquet(hourParquet,allhour)            
 
-# def selectHourCol(popular):
-#     newCategory = {}
-#     newCategory['cateid'] = category['id']
-#     newCategory['name'] = category['name']
-#     return newCategory
+# def selectHourCol(popular,venueId):
+#     newPopulars = []
+#     for day in popular['days']:
+#         newPopular = {}
+#         newPopular['day'] = day
+#         newPopular['start'] = popular['open'][0]['start']
+#         newPopular['end'] = popular['open'][0]['end']
+#         newPopular['venueid'] = venueId
+#         newPopulars.append(newPopular)
+#     return newPopulars

@@ -19,19 +19,19 @@ sc = spark.sparkContext
 
 with open('fqVenue.json') as json_data:
     venueJSON = json.load(json_data)
-    FoursquareRepository.saveVenue(venueJSON['response']['venue'], 12453)
+    FoursquareRepository.saveVenue(venueJSON['venue'], 12453)
 
-    parquetFile = spark.read.parquet("FQ_VENUE.parquet")
-    parquetFile.show()
+    parquetFile2 = spark.read.parquet("FQ_VENUE.parquet")
+    parquetFile2.show()
 
-    FoursquareRepository.saveCategory(venueJSON['response']['venue']['categories'])
+    FoursquareRepository.saveCategory(venueJSON['venue']['categories'])
     parquetFile = spark.read.parquet("FQ_CATEGORY.parquet")
     parquetFile.show()
 
 
 with open('fqCheckin.json') as json_data:
     checkinJSON = json.load(json_data)
-    FoursquareRepository.saveCheckin(checkinJSON['response']['hereNow'], "4bea24b59fa3ef3bc91a80c9")
+    FoursquareRepository.saveCheckin(checkinJSON['hereNow'], "4bea24b59fa3ef3bc91a80c9")
 
     parquetFile = spark.read.parquet("FQ_CHECKIN.parquet")
     parquetFile.show()
@@ -39,18 +39,18 @@ with open('fqCheckin.json') as json_data:
 
 with open('fqTip.json') as json_data:
     tipJSON = json.load(json_data)
-    FoursquareRepository.saveTip(tipJSON['response']['tips'], "4bea24b59fa3ef3bc91a80c9")
+    FoursquareRepository.saveTips(tipJSON['tips'], "4bea24b59fa3ef3bc91a80c9")
 
     parquetFile = spark.read.parquet("FQ_TIP.parquet")
     parquetFile.show()
 
-    FoursquareRepository.saveUser(tipJSON['response']['tips']['items'][0]['user'])
+    FoursquareRepository.saveUser(tipJSON['tips']['items'][0]['user'])
     parquetFile = spark.read.parquet("FQ_USER.parquet")
     parquetFile.show()
 
 with open('fqPhoto.json') as json_data:
     photoJSON = json.load(json_data)
-    FoursquareRepository.savePhoto(photoJSON['response']['photos'], "4bea24b59fa3ef3bc91a80c9")
+    FoursquareRepository.savePhotos(photoJSON['photos'], "4bea24b59fa3ef3bc91a80c9")
 
     parquetFile = spark.read.parquet("FQ_PHOTO.parquet")
     parquetFile.show()

@@ -1,9 +1,5 @@
-{
-  "meta": {
-    "code": 200,
-    "requestId": "5868c2704c1f676d03be999d"
-  },
-  "response": {
+
+  {
     "photos": {
       "count": 38679,
       "items": [
@@ -4563,4 +4559,3 @@
       ]
     }
   }
-}

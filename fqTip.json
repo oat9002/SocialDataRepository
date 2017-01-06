@@ -1,9 +1,4 @@
 {
-  "meta": {
-    "code": 200,
-    "requestId": "5862587f9fb6b73bebd59cc0"
-  },
-  "response": {
     "tips": {
       "count": 816,
       "items": [
@@ -6918,5 +6913,4 @@
         }
       ]
     }
-  }
 }

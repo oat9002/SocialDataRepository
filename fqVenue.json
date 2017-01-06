@@ -1,9 +1,4 @@
 {
-  "meta": {
-    "code": 200,
-    "requestId": "5868c91fdd57972f5369cd42"
-  },
-  "response": {
     "venue": {
       "id": "4b0587fdf964a52034ab22e3",
       "name": "Siam Paragon (สยามพารากอน)",
@@ -1618,4 +1613,3 @@
       }
     }
   }
-}

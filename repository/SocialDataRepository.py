@@ -56,7 +56,7 @@ def addFQPhotos(data):
     venueId = data['venueId']    
     FoursquareRepository.savePhotos(photos,venueId)
     for photo in photos['items']:
-        FoursquareRepository.saveUser(tip['user'])
+        FoursquareRepository.saveUser(photo['user'])
         
 
 #SOCIALDATA##################################

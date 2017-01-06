@@ -95,7 +95,10 @@ def saveUser(user):
 def selectUserCol(user):
     newUser = {}
     newUser['userid'] = user['id']
-    newUser['name'] = user['firstName']+' '+user['lastName']
+    if 'lastName' in user:
+        newUser['name'] = user['firstName']+' '+user['lastName']
+    else:
+        newUser['name'] = user['firstName']
     newUser['gender'] = user['gender']
     return newUser
 

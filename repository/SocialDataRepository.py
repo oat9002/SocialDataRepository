@@ -12,6 +12,7 @@ import FacebookRepository
 import googlemaps
 import json
 import os.path as path
+from random import randint
 
 
 spark = SparkSession\
@@ -46,23 +47,24 @@ def addFQCheckin(data):
 
 def addFQTips(data):
     tips = data['tips']
-    venueId = data['venueId']    
+    venueId = data['venueId']
     FoursquareRepository.saveTips(tips,venueId)
     for tip in tips['items']:
         FoursquareRepository.saveUser(tip['user'])
 
 def addFQPhotos(data):
     photos = data['photos']
-    venueId = data['venueId']    
+    venueId = data['venueId']
     FoursquareRepository.savePhotos(photos,venueId)
     for photo in photos['items']:
         FoursquareRepository.saveUser(photo['user'])
 
+
 def getAllFQVenue():
     return FoursquareRepository.getAllVenue()
 
-#SOCIALDATA##################################
 
+#SOCIALDATA##################################
 def addPlaceOrQuery(newPlace):
     #if no field 'geolocation'
     if not 'geolocation' in newPlace:
@@ -74,16 +76,34 @@ def addPlaceOrQuery(newPlace):
             places = placeDF.select(placeDF.id, placeDF.geolocation).collect()
             samePlace = False
             for place in places:
-                samePlace = compareQueryAndPlace(place, placeGoogle, newPlace['keyword'])
+                samePlace = comparePlace(place, placeGoogle)
                 if samePlace:
                     query = {}
                     query['keyword'] = newPlace['keyword']
                     queryid = saveQuery(query,  place['id'])
                     return queryid
             if not samePlace:
-                return None #Fixed here
+                randomIndex = randint(0, len(placeGoogle) - 1)
+                place = {}
+                place['name'] = placeGoogle[randomIndex]['name']
+                coordinate = (str(placeGoogle[randomIndex]['geometry']['location']['lat']), (str(placeGoogle[randomIndex]['geometry']['location']['lng'])))
+                place['geolocation'] = ",".join(coordinate)
+                placeid = savePlace(place)
+                query = {}
+                query['keyword'] = newPlace['keyword']
+                queryid = saveQuery(query,placeid)
+                return queryid
         else:
-            return None #Fixed here
+            predictedPlaces = getPredictedPlaceFromGoogle(newPlace['keyword'])
+            randomIndex = randint(0, len(predictedPlaces) - 1)
+            place = {}
+            place['name'] = predictedPlaces[randomIndex]['name']
+            place['geolocation'] = str(predictedPlaces[randomIndex]['geometry']['location']['lat'] + "," + predictedPlaces[randomIndex]['geometry']['location']['lng'])
+            placeid = savePlace(place)
+            query = {}
+            query['keyword'] = newPlace['keyword']
+            queryid = saveQuery(query,placeid)
+            return queryid
     else:
         place = {}
         place['name'] = newPlace['keyword']
@@ -102,7 +122,7 @@ def addPlaceOrQuery(newPlace):
 #             placeGoogle = getPlacesFromGoogle(query['keyword'])
 #             place_id = ""
 #             for place in places:
-#                 samePlace = compareQueryAndPlace(place, placeGoogle, query['keyword'])
+#                 samePlace = comparePlace(place, placeGoogle, query['keyword'])
 #                 if samePlace:
 #                     place_id = place['id']
 #                     break
@@ -173,7 +193,7 @@ def savePlace(place):
         allPlace = placeBaseDF.collect()
         for existPlace in allPlace:
             existLL = existPlace['geolocation'].split(",")
-            if comparePlace(existLL[0],existLL[1],placeLL[0],placeLL[1]):
+            if compareLatLng(existLL[0],existLL[1],placeLL[0],placeLL[1]):
                 return existPlace['id']
     newPlace = createPlaceSchema(place)
     placeRDD = sc.parallelize([newPlace])
@@ -188,18 +208,18 @@ def createPlaceSchema(place):
     newPlace['geolocation'] = place['geolocation']
     return newPlace
 
-def compareQueryAndPlace(place_db, place_google, query):
+def comparePlace(place_db, place_google): #place from database abd place from google
     geolo_db = place_db['geolocation'].split(",")
     samePlace = False
     if place_google != None:
         for place in place_google:
             place = json.loads(json.dumps(place, ensure_ascii=False))
-            samePlace = comparePlace(place['geometry']['location']['lat'], place['geometry']['location']['lng'], geolo_db[0], geolo_db[1])
+            samePlace = compareLatLng(place['geometry']['location']['lat'], place['geometry']['location']['lng'], geolo_db[0], geolo_db[1])
             if samePlace:
                 break
     return samePlace
 # compare 100 m.
-def comparePlace(lat1, lng1, lat2, lng2):
+def compareLatLng(lat1, lng1, lat2, lng2):
     newport_ri = (Decimal(lat1), Decimal(lng1))
     cleveland_oh = (Decimal(lat2), Decimal(lng2))
     acceptRadius = great_circle(newport_ri, cleveland_oh).miles
@@ -215,6 +235,13 @@ def getPlacesFromGoogle(name):
         return places['results']
     else:
         return None
+def getPredictedPlaceFromGoogle(name): #name of place is to predict
+    gmaps = googlemaps.Client(key='AIzaSyA0_9hFyqLO5uV5pWQUSGL0g5MmtsXwNj4')
+    names = gmaps.places_autocomplete(input_text=name, radius=100, components={'country': 'TH'})
+    places = []
+    for item in names:
+        places.append(gmaps.place(place_id=item['place_id'])['result'])
+    return places
 
 #########################################################################################################
 

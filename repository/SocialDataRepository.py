@@ -60,6 +60,10 @@ def addFQPhotos(data):
         FoursquareRepository.saveUser(photo['user'])
 
 
+def getAllFQVenue():
+    return FoursquareRepository.getAllVenue()
+
+
 #SOCIALDATA##################################
 def addPlaceOrQuery(newPlace):
     #if no field 'geolocation'

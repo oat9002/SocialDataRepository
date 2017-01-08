@@ -46,5 +46,10 @@ def addFQPhotos():
     SocialDataRepository.addFQPhotos(json.loads(request.get_data()))
     return ('', 204)
 
+@app.route("/foursquare/getAllVenue", methods=['GET'])
+def getAllFQVenue():
+    res = SocialDataRepository.getAllFQVenue()
+    return (res, 204)
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=5001)

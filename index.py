@@ -11,20 +11,20 @@ app.config['DEBUG'] = True
 def index():
     return "Welcome to SocialDataRepository!"
 
-@app.route("/saveQuery", methods=['POST'])
-def saveQuery():
-    SocialDataRepository.saveQuery(json.loads(request.get_data()))
+@app.route("/addPlaceOrQuery", methods=['POST']) #{keyword: , geolocation:}
+def addPlaceOrQuery():
+    SocialDataRepository.addPlaceOrQuery(json.loads(request.get_data()))
     return ('', 204)
 
-@app.route("/twitter/saveTweet", methods=['POST'])
-def saveTweet():
+@app.route("/twitter/addTweet", methods=['POST'])
+def addTweet():
     SocialDataRepository.saveTweet(json.loads(request.get_data()))
     return ('', 204)
 
-@app.route("/twitter/read", methods=['GET'])
-def readTweet():
-    TwitterRepository.readTweet()
-    return ('', 204)
+# @app.route("/twitter/read", methods=['GET'])
+# def readTweet():
+#     TwitterRepository.readTweet()
+#     return ('', 204)
 
 @app.route("/foursquare/addVenue", methods=['POST'])
 def addFQVenue():

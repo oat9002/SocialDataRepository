@@ -28,7 +28,7 @@ def saveTweet(data):
     twitter = {}
     twitter['tweets'] = filteredTweet
     twitter['query'] = data['query']
-    SocialDataNormalize("twitter", twitter)
+    # SocialDataNormalize("twitter", twitter)
 
 #foursquare
 def addFQVenue(data):
@@ -238,34 +238,3 @@ def getPredictedPlaceFromGoogle(name): #name of place is to predict
     for item in names:
         places.append(gmaps.place(place_id=item['place_id'])['result'])
     return places
-
-#########################################################################################################
-
-# #TweetLocationSearch table
-# def saveTweetLocationSearch(location):
-#     tweetLocationSearchParquet = "tweetLocationSearch.parquet"
-#     tweetLocationSearchBaseDF = spark.read.parquet(tweetLocationSearchParquet)
-#     existLocation = False
-#     for row in tweetLocationSearchBaseDF.collect():
-#         newport_ri = (location['coordinates'][0], location['coordinates'][1])
-#         cleveland_oh = (row['coordinates'][0], ro['coordinates'][1])
-#         acceptRadius = great_circle(newport_ri, cleveland_oh).kilometers
-#         if acceptRadius <= 0.5:
-#             existLocation = True
-#             return row['id']
-#         if !existLocation:
-#             newLocationRDD = sc.parallelize([createTweetLocationSearchSchema(location)])
-#             newLocationDF = spark.createDataFrame(newLocationRDD)
-#             newLocation.write.mode("append").parquet(tweetLocationSearchParquet)
-#             return newLocation['id']
-#
-# def createTweetLocationSearchSchema(location):
-#     tweetLocationSearch = {}
-#     tweetLocationSearch['id'] = uuid.uuid4()
-#     tweetLocationSearch['coordinates'] = location['coordinates'] if location['coordinates'] != "null" else None
-#     tweetLocationSearch['frequency'] = 0
-#     return tweetLocationSearch
-#
-
-
-#########################################################################################################

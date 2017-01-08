@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import os.path as path
 sys.path.append('../service')
 from pyspark import SparkContext
 from pyspark.sql import *

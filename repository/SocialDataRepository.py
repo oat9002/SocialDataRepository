@@ -57,7 +57,9 @@ def addFQPhotos(data):
     FoursquareRepository.savePhotos(photos,venueId)
     for photo in photos['items']:
         FoursquareRepository.saveUser(photo['user'])
-        
+
+def getAllFQVenue():
+    return FoursquareRepository.getAllVenue()
 
 #SOCIALDATA##################################
 

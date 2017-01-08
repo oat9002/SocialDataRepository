@@ -24,6 +24,14 @@ def writeParquet(parquetFile,rowArr):
     else:
         print("no row written")
 
+def getAllVenue():
+    venueParquet = "FQ_VENUE.parquet"
+    if path.exists(venueParquet):     
+        row = spark.read.parquet(venueParquet).collect()
+        venueDict = row.asDict()
+        return venueDict
+    return None
+
 #FQ_VENUE####################################
 def saveVenue(venue,queryId):
     venueParquet = "FQ_VENUE.parquet"

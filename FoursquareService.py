@@ -32,11 +32,30 @@ sc = spark.sparkContext
 # else:
 #     venue = resp.json()
 #     SocialDataRepository.addFQVenue(venue)
-parquetFile = spark.read.parquet("FQ_VENUE.parquet")
-parquetFile.where(parquetFile.venueid == "4c2ad1448abca593b450ff1f").show()
+# parquetFile = spark.read.parquet("FQ_VENUE.parquet")
+# print(parquetFile.where(parquetFile.venueid == "4c034d0cf56c2d7fa6c71c66").count())
 
     # parquetFile.show()
 
-ex ={}
-ex['keyword'] = "abc"
-print(SocialDataRepository.addPlaceOrQuery(ex))
+# ex ={}
+# ex['keyword'] = "abc"
+# print(SocialDataRepository.addPlaceOrQuery(ex))
+
+# data = {
+#     "hereNow": {
+#       "count": 0,
+#       "items": []
+#     },
+#     "venueId" : "4c034d0cf56c2d7fa6c71c66"
+#   }
+
+# r = requests.post('http://203.151.85.73:5001/foursquare/addCheckin', json=data)
+# print(r.status_code)
+
+
+# parquetFile = spark.read.parquet("FQ_VENUE.parquet")
+# # parquetFile.show()
+# print(parquetFile.toJSON)
+# parquetFile.show()
+
+print(SocialDataRepository.getAllFQVenue())

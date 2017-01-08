@@ -27,9 +27,11 @@ def writeParquet(parquetFile,rowArr):
 def getAllVenue():
     venueParquet = "FQ_VENUE.parquet"
     if path.exists(venueParquet):     
-        row = spark.read.parquet(venueParquet).collect()
-        venueDict = row.asDict()
-        return venueDict
+        venueLst = []
+        rows = spark.read.parquet(venueParquet).collect()
+        for row in rows:
+            venueLst.append(row.asDict())
+        return venueLst
     return None
 
 #FQ_VENUE####################################

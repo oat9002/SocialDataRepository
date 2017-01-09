@@ -22,16 +22,18 @@ sc = spark.sparkContext
 
 # print(SocialDataRepository.comparePlace("13.72767543677477","13.72767543677477","13.72767543677477","13.72767543677477"))
 
-# venueId = "4b8a56c2f964a520226932e3"
+venueId = "4c034d0cf56c2d7fa6c71c66"
 
-# resp = requests.get('http://localhost:6003/foursquare/detail?venue_id='+venueId)
-# if resp.status_code != 200:
-#     # This means something went wrong.
-#     # raise ApiError('GET /tasks/ {}'.format(resp.status_code))
-#     print("Request Error code "+resp.status_code)
-# else:
-#     venue = resp.json()
-#     SocialDataRepository.addFQVenue(venue)
+resp = requests.get('http://localhost:6003/foursquare/detail?venue_id='+venueId)
+if resp.status_code != 200:
+    # This means something went wrong.
+    # raise ApiError('GET /tasks/ {}'.format(resp.status_code))
+    print("Request Error code "+resp.status_code)
+else:
+    venue = resp.json()['response']
+    res = {}
+    res['venue'] = venue['venue']
+    SocialDataRepository.addFQVenue(res)
 # parquetFile = spark.read.parquet("FQ_VENUE.parquet")
 # print(parquetFile.where(parquetFile.venueid == "4c034d0cf56c2d7fa6c71c66").count())
 

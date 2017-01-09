@@ -49,7 +49,9 @@ def addFQPhotos():
 @app.route("/foursquare/getAllVenue", methods=['GET'])
 def getAllFQVenue():
     res = SocialDataRepository.getAllFQVenue()
-    return (res, 204)
+    venue = {}
+    venue['venues'] = res
+    return str(venue)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=5001)

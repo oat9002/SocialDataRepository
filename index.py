@@ -51,7 +51,7 @@ def getAllFQVenue():
     res = SocialDataRepository.getAllFQVenue()
     venue = {}
     venue['venues'] = res
-    return str(venue)
+    return str(json.dumps(venue))
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0',port=5001)

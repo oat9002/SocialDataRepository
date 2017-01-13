@@ -22,18 +22,20 @@ sc = spark.sparkContext
 
 # print(SocialDataRepository.comparePlace("13.72767543677477","13.72767543677477","13.72767543677477","13.72767543677477"))
 
-venueId = "4c034d0cf56c2d7fa6c71c66"
+venueId = "4b0587fdf964a52034ab22e3"
 
-resp = requests.get('http://localhost:6003/foursquare/detail?venue_id='+venueId)
-if resp.status_code != 200:
-    # This means something went wrong.
-    # raise ApiError('GET /tasks/ {}'.format(resp.status_code))
-    print("Request Error code "+resp.status_code)
-else:
-    venue = resp.json()['response']
-    res = {}
-    res['venue'] = venue['venue']
-    SocialDataRepository.addFQVenue(res)
+# resp = requests.get('http://localhost:6003/foursquare/detail?venue_id='+venueId)
+# if resp.status_code != 200:
+#     # This means something went wrong.
+#     # raise ApiError('GET /tasks/ {}'.format(resp.status_code))
+#     print("Request Error code "+resp.status_code)
+# else:
+#     venue = resp.json()['response']
+#     res = {}
+#     res['venue'] = venue['venue']
+#     SocialDataRepository.addFQVenue(res)
+
+
 # parquetFile = spark.read.parquet("FQ_VENUE.parquet")
 # print(parquetFile.where(parquetFile.venueid == "4c034d0cf56c2d7fa6c71c66").count())
 
@@ -55,9 +57,29 @@ else:
 # print(r.status_code)
 
 
+# parquetFile = spark.read.parquet("PLACE.parquet")
+# parquetFile.show()
+
+# parquetFile = spark.read.parquet("QUERY.parquet")
+# parquetFile.show()
+
 # parquetFile = spark.read.parquet("FQ_VENUE.parquet")
-# # parquetFile.show()
+# parquetFile.show()
+
 # print(parquetFile.toJSON)
 # parquetFile.show()
 
-print(SocialDataRepository.getAllFQVenue())
+
+# print(SocialDataRepository.getAllFQVenue())
+
+# with open('fqTip.json') as json_data:
+#     tipJSON = json.load(json_data)
+#     SocialDataRepository.addFQTips(tipJSON)
+
+
+with open('fqCheckin.json') as json_data:
+    tipJSON = json.load(json_data)
+    SocialDataRepository.addFQCheckin(tipJSON)
+
+parquetFile = spark.read.parquet("SOCIALDATA.parquet")
+parquetFile.where(parquetFile.source== "FQ_CHECKIN").show()

@@ -15,6 +15,13 @@ spark = SparkSession\
     .getOrCreate()
 
 sc = spark.sparkContext
+venueParquet = "FQ_VENUE.parquet"
+checkinParquet = "FQ_CHECKIN.parquet"
+tipParquet = "FQ_TIP.parquet"
+userParquet = "FQ_USER.parquet"
+photoParquet = "FQ_PHOTO.parquet"
+categoryParquet = "FQ_CATEGORY.parquet"
+
 
 def writeParquet(parquetFile,rowArr):
     if len(rowArr) > 0:
@@ -25,7 +32,6 @@ def writeParquet(parquetFile,rowArr):
         print("no row written")
 
 def getAllVenue():
-    venueParquet = "FQ_VENUE.parquet"
     if path.exists(venueParquet):     
         venueLst = []
         rows = spark.read.parquet(venueParquet).collect()
@@ -34,9 +40,16 @@ def getAllVenue():
         return venueLst
     return None
 
+def findQueryIdByVenueId(venueId):
+    if path.exists(venueParquet):     
+        venueBaseDF = spark.read.parquet(venueParquet)
+        existVenue = venueBaseDF.where(venueBaseDF.venueid == venueId)
+        if existVenue.count() >= 0:
+            return existVenue.first().query_id
+    return None
+    
 #FQ_VENUE####################################
 def saveVenue(venue,queryId):
-    venueParquet = "FQ_VENUE.parquet"
     if path.exists(venueParquet):     
         venueBaseDF = spark.read.parquet(venueParquet)
         existVenue = venueBaseDF.where(venueBaseDF.venueid == venue['id'])
@@ -55,8 +68,9 @@ def selectVenueCol(venue,queryId):
 
 #FQ_CHECKIN####################################
 def saveCheckin(checkin,venueId):
-    checkinParquet = "FQ_CHECKIN.parquet"
-    writeParquet(checkinParquet,[selectCheckinCol(checkin,venueId)])             
+    checkin = selectCheckinCol(checkin,venueId)
+    writeParquet(checkinParquet,[checkin])     
+    return checkin
 
 def selectCheckinCol(checkin,venueId):
     newCheckin = {}
@@ -68,7 +82,6 @@ def selectCheckinCol(checkin,venueId):
 
 #FQ_TIP####################################
 def saveTips(tips,venueId):
-    tipParquet = "FQ_TIP.parquet"
     allTips = []
     if path.exists(tipParquet):     
         tipBaseDF = spark.read.parquet(tipParquet)
@@ -80,7 +93,8 @@ def saveTips(tips,venueId):
     else:
         for tip in tips['items']:
             allTips.append(selectTipCol(tip,venueId))
-        writeParquet(tipParquet,allTips)            
+        writeParquet(tipParquet,allTips)    
+    return allTips        
 
 def selectTipCol(tip,venueId):
     newTip = {}
@@ -92,15 +106,19 @@ def selectTipCol(tip,venueId):
     return newTip
 
 #FQ_USER####################################
-def saveUser(user):
-    userParquet = "FQ_USER.parquet"
+def saveUser(users):
+    allUser = []
     if path.exists(userParquet):     
         userBaseDF = spark.read.parquet(userParquet)
-        existUser = userBaseDF.where(userBaseDF.userid == user['id'])
-        if existUser.count() == 0:
-            writeParquet(userParquet,[selectUserCol(user)])
+        for user in users:
+            existUser = userBaseDF.where(userBaseDF.userid == user['id'])
+            if existUser.count() == 0:
+                allUser.append(selectUserCol(user))
+        writeParquet(userParquet,allUser)
     else:
-        writeParquet(userParquet,[selectUserCol(user)])            
+        for user in users:
+            allUser.append(selectUserCol(user))            
+        writeParquet(userParquet,allUser)            
 
 def selectUserCol(user):
     newUser = {}
@@ -114,7 +132,6 @@ def selectUserCol(user):
 
 #FQ_PHOTO####################################
 def savePhotos(photos,venueId):
-    photoParquet = "FQ_PHOTO.parquet"
     allPhoto = []
     if path.exists(photoParquet):     
         photoBaseDF = spark.read.parquet(photoParquet)
@@ -126,7 +143,8 @@ def savePhotos(photos,venueId):
     else:
         for photo in photos['items']:
             allPhoto.append(selectPhotoCol(photo,venueId))
-        writeParquet(photoParquet,allPhoto)            
+        writeParquet(photoParquet,allPhoto)   
+    return allPhoto         
 
 def selectPhotoCol(photo,venueId):
     newPhoto = {}
@@ -139,7 +157,6 @@ def selectPhotoCol(photo,venueId):
 
 #FQ_CATEGORY####################################
 def saveCategory(category):
-    categoryParquet = "FQ_CATEGORY.parquet"
     if path.exists(categoryParquet):     
         categoryBaseDF = spark.read.parquet(categoryParquet)
         existCategory = categoryBaseDF.where(categoryBaseDF.cateid == category[0]['id'])

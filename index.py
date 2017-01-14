@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from repository import SocialDataRepository
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import json
 
 
@@ -51,7 +51,7 @@ def getAllFQVenue():
     res = SocialDataRepository.getAllFQVenue()
     venue = {}
     venue['venues'] = res
-    return str(venue)
+    return jsonify(venue)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=5001)
+    app.run(host='0.0.0.0',port=5002)

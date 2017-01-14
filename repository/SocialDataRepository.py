@@ -22,6 +22,15 @@ spark = SparkSession\
 
 sc = spark.sparkContext
 
+def writeParquet(parquetFile,rowArr):
+    if len(rowArr) > 0:
+        rowRDD = sc.parallelize(rowArr)
+        rowDF = spark.createDataFrame(rowRDD)
+        rowDF.write.mode("append").parquet(parquetFile)
+    else:
+        print("no row written")
+
+
 #Twitter
 def saveTweet(data):
     filteredTweet = TwitterRepository.saveTweet(data['tweets'], data['query']['id'])
@@ -43,22 +52,38 @@ def addFQVenue(data):
 def addFQCheckin(data):
     checkin = data['hereNow']
     venueId = data['venueId']
-    FoursquareRepository.saveCheckin(checkin,venueId)
+    social = {}    
+    savedCheckin = FoursquareRepository.saveCheckin(checkin,venueId)
+    social['checkin'] = savedCheckin
+    social['place'] = FindPlaceByVenueId(venueId)
+    SocialDataNormalize("FQ_CHECKIN",social)
 
 def addFQTips(data):
     tips = data['tips']
     venueId = data['venueId']
-    FoursquareRepository.saveTips(tips,venueId)
+    social = {}
+    allUser = []
+    savedTips = FoursquareRepository.saveTips(tips,venueId)
     for tip in tips['items']:
-        FoursquareRepository.saveUser(tip['user'])
+        allUser.append(tip['user'])
+    FoursquareRepository.saveUser(allUser)
+    social['tips'] = savedTips
+    social['place'] = FindPlaceByVenueId(venueId)
+    SocialDataNormalize("FQ_TIP",social)
+
 
 def addFQPhotos(data):
     photos = data['photos']
     venueId = data['venueId']
-    FoursquareRepository.savePhotos(photos,venueId)
+    social = {}    
+    allUser = []    
+    savedPhotos = FoursquareRepository.savePhotos(photos,venueId)
     for photo in photos['items']:
-        FoursquareRepository.saveUser(photo['user'])
-
+        allUser.append(photo['user'])  
+    FoursquareRepository.saveUser(allUser)
+    social['photos'] = savedPhotos
+    social['place'] = FindPlaceByVenueId(venueId)
+    SocialDataNormalize("FQ_PHOTO",social)
 
 def getAllFQVenue():
     return FoursquareRepository.getAllVenue()
@@ -134,32 +159,94 @@ def addPlaceOrQuery(newPlace):
 #             queryDF = spark.createDataFrame(queryRDD)
 #             queryDF.write.mode("append").parquet(
 
+def FindPlaceByVenueId(venueId):
+    queryParquet = "QUERY.parquet"
+    placeParquet = "PLACE.parquet"
+    if path.exists(queryParquet) and path.exists(placeParquet):     
+        queryBaseDF = spark.read.parquet(queryParquet)
+        placeBaseDF = spark.read.parquet(placeParquet)
+        queryId = FoursquareRepository.findQueryIdByVenueId(venueId)
+        if queryId != None:
+            existQuery = queryBaseDF.where(queryBaseDF.id == queryId)
+            if existQuery.count() >= 0:
+                placeId = existQuery.first().place_id
+                existPlace = placeBaseDF.where(placeBaseDF.id == placeId)
+                if existPlace.count() >= 0:
+                    return existPlace.first().asDict()
+    return None
+
+#SOCIALDATA table#########################################
 
 def SocialDataNormalize(type, data):
     socialDataArr = []
+    socialDataParquet = "SOCIALDATA.parquet"
+    # if path.exists(socialDataParquet):
+    #     socialDataBaseDF = spark.read.parquet(socialDataParquet)
     if type == "twitter":
-        socialDataParquet = "SOCIALDATA.parquet"
-        socialDataBaseDF = spark.read.parquet(socialDataParquet)
         for tweet in data['tweets']:
             normalizedData = createSocialDataSchema("twitter", tweet)
             socialDataArr.append(normalizedData)
-    socialDataRDD = sc.parallelize(socialDataArr)
-    socialDataDF = spark.createDataFrame(socialDataRDD)
-    socialDataDF.write.mode("append").parquet(socialDataParquet)
+    elif type == "FQ_TIP":
+        for tip in data['tips']:
+            newdata = {}
+            newdata['tip'] = tip
+            newdata['place'] = data['place']
+            normalizedData = createSocialDataSchema(type, newdata)
+            socialDataArr.append(normalizedData)
+    elif type == "FQ_PHOTO":
+        for photo in data['photos']:
+            newdata = {}
+            newdata['photo'] = photo
+            newdata['place'] = data['place']
+            normalizedData = createSocialDataSchema(type, newdata)
+            socialDataArr.append(normalizedData)
+    elif type == "FQ_CHECKIN":
+        normalizedData = createSocialDataSchema(type, data)
+        socialDataArr.append(normalizedData)
+    print(socialDataArr)
+    writeParquet(socialDataParquet,socialDataArr)
 
 def createSocialDataSchema(type, data):
+    newData = {}
+    newData['id'] = str(uuid.uuid4())
+
     if type == "twitter":
-        newData = {}
-        newData['id'] = uuid.uuid4()
         newData['created_at'] = date.parse(data['created_at'])
-        newData['day_of_week'] = date.parse(data['created_at']).strftime("%A")
         newData['geolocation'] = None
-        newData['place_name'] = None
+        newData['place_id'] = None
         newData['message'] = data['text']
         newData['number_of_checkin'] = data['favorite_count']
         newData['source'] = "twitter"
         newData['source_id'] = data['id']
         return newData
+    elif type == "FQ_TIP":
+        newData['created_at'] = data['tip']['created_at']
+        newData['geolocation'] = data['place']['geolocation']
+        newData['place_id'] =data['place']['id']
+        newData['message'] = data['tip']['message']
+        newData['number_of_checkin'] = 1
+        newData['source'] = type
+        newData['source_id'] = data['tip']['tipid']
+        return newData
+    elif type == "FQ_PHOTO":
+        newData['created_at'] = data['photo']['created_at']
+        newData['geolocation'] = data['place']['geolocation']
+        newData['place_id'] =data['place']['id']
+        newData['message'] = data['photo']['photo']
+        newData['number_of_checkin'] = 1
+        newData['source'] = type
+        newData['source_id'] = data['photo']['photoid']
+        return newData
+    elif type == "FQ_CHECKIN":
+        newData['created_at'] = data['checkin']['created_at']
+        newData['geolocation'] = data['place']['geolocation']
+        newData['place_id'] =data['place']['id']
+        newData['message'] = ""
+        newData['number_of_checkin'] = data['checkin']['count']
+        newData['source'] = type
+        newData['source_id'] = data['checkin']['id']
+        return newData
+    return None        
 
 #Query table#########################################
 def saveQuery(query,place_id):
@@ -170,10 +257,7 @@ def saveQuery(query,place_id):
         if existQuery.count() > 0:
             return existQuery.first().id
     newQuery = createQuerySchema(query,place_id)
-    print(newQuery)
-    queryRDD = sc.parallelize([newQuery])
-    queryDF = spark.createDataFrame(queryRDD)
-    queryDF.write.mode("append").parquet(queryParquet)
+    writeParquet(queryParquet,[newQuery])
     return newQuery['id']
 
 def createQuerySchema(query, place_id):
@@ -196,9 +280,7 @@ def savePlace(place):
             if compareLatLng(existLL[0],existLL[1],placeLL[0],placeLL[1]):
                 return existPlace['id']
     newPlace = createPlaceSchema(place)
-    placeRDD = sc.parallelize([newPlace])
-    placeDF = spark.createDataFrame(placeRDD)
-    placeDF.write.mode("append").parquet(placeParquet)
+    writeParquet(placeParquet,[newPlace])
     return newPlace['id']
 
 def createPlaceSchema(place):

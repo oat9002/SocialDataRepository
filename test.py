@@ -1,10 +1,14 @@
+# -*- coding: utf-8 -*-
+
 import sys
-sys.path.append('../repository')
+import os
+sys.path.append(os.path.dirname(__file__) + '../repository')
+sys.path.append(os.path.dirname(__file__) + '../service')
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.sql import Row
-import TwitterRepository
-import SocialDataRepository
+from repository import TwitterRepository
+from repository import SocialDataRepository
 import os
 import json
 import googlemaps
@@ -27,7 +31,7 @@ sc = spark.sparkContext
 # keywords = queryDF.select(queryDF.id, queryDF.keyword).collect()
 # print keywords[0]['id']
 #
-# tweetDF = spark.read.parquet("./SocialDataRepository/TW_TWEET.parquet")
+# tweetDF = spark.read.parquet("TW_TWEET.parquet")
 # print tweetDF.toJSON().first()
 # print tweetDF.count()
 
@@ -47,8 +51,19 @@ sc = spark.sparkContext
 # print(df.count())
 
 # queryDF = spark.read.parquet("./SocialDataRepository/QUERY.parquet")
-placeDF = spark.read.parquet("../PLACE.parquet")
+# placeDF = spark.read.parquet("./PLACE.parquet")
+# placeDF.show()
+# newPlace = {}
+# newPlace['keyword'] = "paradise park"
+# SocialDataRepository.addPlaceOrQuery(newPlace)
+placeDF = spark.read.parquet("./PLACE.parquet")
 placeDF.show()
+# txt = 'สยามพารากอน'
+# placeDF = placeDF.where(placeDF.name != txt)
+# placeDF.show()
+# placeDF.write.mode("overwrite").parquet("./PLACE.parquet")
+# test = placeDF.where()
+# placeDF.show()
 # test = queryDF.join(placeDF, queryDF.place_id == placeDF.id, 'outer')
 #
 # queryDF.show()
@@ -70,7 +85,3 @@ placeDF.show()
 # tweetDF = spark.read.parquet("../TW_TWEET.parquet")
 # test = tweetDF.sort(tweetDF.created_at.desc()).limit(10)
 # test.show()
-
-
-
-

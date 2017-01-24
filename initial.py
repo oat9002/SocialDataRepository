@@ -16,7 +16,7 @@ spark = SparkSession\
 
 sc = spark.sparkContext
 
-places
+
 if not path.exists("PLACE.parquet"):
     with open("place.json", "r") as file:
         placeJson = json.load(file)
@@ -83,6 +83,7 @@ if not path.exists("TW_TWEET.parquet"):
         userDF = spark.createDataFrame(userRDD)
         if not path.exists("TW_USER.parquet"):
             userDF.write.parquet('TW_USER.parquet')
+            userDF.printSchema()
         TwitterRepository.saveRawTweet(tweet_backup)
         with open("TW_TWEET_BACKUP.json", 'r') as test:
             json = [json.loads(line) for line in test]

@@ -18,7 +18,9 @@ def addPlaceOrQuery():
 
 @app.route("/twitter/addTweet", methods=['POST'])
 def addTweet():
-    SocialDataRepository.saveTweet(json.loads(request.get_data()))
+    # SocialDataRepository.saveTweet(json.loads(request.get_data()))
+    SocialDataRepository.saveTweet(request.get_json(force=True))
+    # print json.dumps(request.get_data(), indent=2)
     return ('', 204)
 
 # @app.route("/twitter/read", methods=['GET'])

@@ -52,7 +52,7 @@ def addFQVenue(data):
 def addFQCheckin(data):
     checkin = data['hereNow']
     venueId = data['venueId']
-    social = {}    
+    social = {}
     savedCheckin = FoursquareRepository.saveCheckin(checkin,venueId)
     social['checkin'] = savedCheckin
     social['place'] = FindPlaceByVenueId(venueId)
@@ -75,11 +75,11 @@ def addFQTips(data):
 def addFQPhotos(data):
     photos = data['photos']
     venueId = data['venueId']
-    social = {}    
-    allUser = []    
+    social = {}
+    allUser = []
     savedPhotos = FoursquareRepository.savePhotos(photos,venueId)
     for photo in photos['items']:
-        allUser.append(photo['user'])  
+        allUser.append(photo['user'])
     FoursquareRepository.saveUser(allUser)
     social['photos'] = savedPhotos
     social['place'] = FindPlaceByVenueId(venueId)
@@ -162,7 +162,7 @@ def addPlaceOrQuery(newPlace):
 def FindPlaceByVenueId(venueId):
     queryParquet = "QUERY.parquet"
     placeParquet = "PLACE.parquet"
-    if path.exists(queryParquet) and path.exists(placeParquet):     
+    if path.exists(queryParquet) and path.exists(placeParquet):
         queryBaseDF = spark.read.parquet(queryParquet)
         placeBaseDF = spark.read.parquet(placeParquet)
         queryId = FoursquareRepository.findQueryIdByVenueId(venueId)
@@ -212,8 +212,8 @@ def createSocialDataSchema(type, data):
 
     if type == "twitter":
         newData['created_at'] = date.parse(data['created_at'])
-        newData['geolocation'] = None
-        newData['place_id'] = None
+        newData['geolocation'] = data['geolocation']
+        newData['place_id'] = data['place_id']
         newData['message'] = data['text']
         newData['number_of_checkin'] = data['favorite_count']
         newData['source'] = "twitter"
@@ -246,7 +246,7 @@ def createSocialDataSchema(type, data):
         newData['source'] = type
         newData['source_id'] = data['checkin']['id']
         return newData
-    return None        
+    return None
 
 #Query table#########################################
 def saveQuery(query,place_id):

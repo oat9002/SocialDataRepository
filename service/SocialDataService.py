@@ -1,16 +1,7 @@
-from pyspark.sql import *
-
-spark = SparkSession\
-    .builder\
-    .appName("Service")\
-    .getOrCreate()
-
-sc = spark.sparkContext
-
-def writeParquet(parquetPath, data):
+def writeParquet(parquetPath, data, sparkContext, sparkSession):
     if len(data) > 0:
-        rowRDD = sc.parallelize(data)
-        rowDF = spark.createDataFrame(rowRDD)
+        rowRDD = sparkContext.parallelize(data)
+        rowDF = sparkSession.createDataFrame(rowRDD)
         rowDF.write.mode("append").parquet(parquetPath)
     else:
         print("no row written")

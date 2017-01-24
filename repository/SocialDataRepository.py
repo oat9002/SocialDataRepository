@@ -56,7 +56,8 @@ def addFQCheckin(data):
     savedCheckin = FoursquareRepository.saveCheckin(checkin,venueId)
     social['checkin'] = savedCheckin
     social['place'] = FindPlaceByVenueId(venueId)
-    SocialDataNormalize("FQ_CHECKIN",social)
+    if social['place'] != None:
+        SocialDataNormalize("FQ_CHECKIN",social)
 
 def addFQTips(data):
     tips = data['tips']
@@ -69,7 +70,8 @@ def addFQTips(data):
     FoursquareRepository.saveUser(allUser)
     social['tips'] = savedTips
     social['place'] = FindPlaceByVenueId(venueId)
-    SocialDataNormalize("FQ_TIP",social)
+    if social['place'] != None:
+        SocialDataNormalize("FQ_TIP",social)
 
 
 def addFQPhotos(data):
@@ -83,7 +85,8 @@ def addFQPhotos(data):
     FoursquareRepository.saveUser(allUser)
     social['photos'] = savedPhotos
     social['place'] = FindPlaceByVenueId(venueId)
-    SocialDataNormalize("FQ_PHOTO",social)
+    if social['place'] != None:
+        SocialDataNormalize("FQ_PHOTO",social)
 
 def getAllFQVenue():
     return FoursquareRepository.getAllVenue()
@@ -172,7 +175,8 @@ def FindPlaceByVenueId(venueId):
                 placeId = existQuery.first().place_id
                 existPlace = placeBaseDF.where(placeBaseDF.id == placeId)
                 if existPlace.count() >= 0:
-                    return existPlace.first().asDict()
+                    if existPlace.first() != None:
+                        return existPlace.first().asDict()
     return None
 
 #SOCIALDATA table#########################################
@@ -203,7 +207,7 @@ def SocialDataNormalize(type, data):
     elif type == "FQ_CHECKIN":
         normalizedData = createSocialDataSchema(type, data)
         socialDataArr.append(normalizedData)
-    print(socialDataArr)
+    # print(socialDataArr)
     writeParquet(socialDataParquet,socialDataArr)
 
 def createSocialDataSchema(type, data):

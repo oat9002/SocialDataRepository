@@ -77,9 +77,18 @@ venueId = "4b0587fdf964a52034ab22e3"
 #     SocialDataRepository.addFQTips(tipJSON)
 
 
-with open('fqCheckin.json') as json_data:
-    tipJSON = json.load(json_data)
-    SocialDataRepository.addFQCheckin(tipJSON)
+# with open('fqCheckin.json') as json_data:
+#     tipJSON = json.load(json_data)
+#     SocialDataRepository.addFQCheckin(tipJSON)
 
-parquetFile = spark.read.parquet("SOCIALDATA.parquet")
-parquetFile.where(parquetFile.source== "FQ_CHECKIN").show()
+venuedf = spark.read.parquet("FQ_VENUE.parquet")
+placedf = spark.read.parquet("PLACE.parquet")
+keyworddf = spark.read.parquet("QUERY.parquet")
+
+keyworddf.show()
+
+venue = venuedf.collect()
+for ve in venue:
+    id = ve.asDict()['venueid']
+    place = SocialDataRepository.FindPlaceByVenueId(id)
+    print(id+" "+place['name'])

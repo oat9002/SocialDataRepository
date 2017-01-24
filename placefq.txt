@@ -1,0 +1,12 @@
+
+
+4df8d001814dd2985fdd35d8 Suvarnabhumi Plaza Market (ตลาดนัดสุวรรณภูมิ)
+4bf774814a67c9288ec623cf The Mall Bangkapi (เดอะมอลล์ บางกะปิ)
+4bb9a4a198c7ef3b61373202 Seacon Square (ซีคอนสแควร์)
+4af833a6f964a5205a0b22e3 Suvarnabhumi Airport (BKK) (ท่าอากาศยานสุวรรณภูมิ)
+4c034d0cf56c2d7fa6c71c66 King Mongkut's Institute of Technology Ladkrabang (KMITL) (สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง)
+4b506953f964a520832227e3 MBK Center (เอ็ม บี เค เซ็นเตอร์)
+4b0587fcf964a52002ab22e3 CentralWorld (เซ็นทรัลเวิลด์)
+4b0587fdf964a5201dab22e3 Siam Discovery (สยามดิสคัฟเวอรี่)
+4b8a56c2f964a520226932e3 Siam Center (สยามเซ็นเตอร์)
+4b0587fdf964a52034ab22e3 Siam Paragon (สยามพารากอน)

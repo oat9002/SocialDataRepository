@@ -16,40 +16,30 @@ spark = SparkSession\
 
 sc = spark.sparkContext
 
-
+# for place
 if not path.exists("PLACE.parquet"):
     with open("place.json", "r") as file:
         placeJson = json.load(file)
-        places = []
         for place in placeJson['places']:
-            places.append(SocialDataRepository.createPlaceSchema(place))
-        placeRDD = sc.parallelize(places)
-        placeDF = spark.createDataFrame(placeRDD)
-        placeDF.write.parquet("PLACE.parquet")
-        placeDF.printSchema()
+            SocialDataRepository.savePlace(SocialDataRepository.createPlaceSchema(place))
 
 #for query
 if not path.exists("QUERY.parquet"):
     with open('tweetQuery.json') as json_data:
         queryJson = json.load(json_data)
-        queries = []
         placeDF = spark.read.parquet("PLACE.parquet")
         places = placeDF.select(placeDF.id, placeDF.name, placeDF.geolocation).collect()
         for query in queryJson['queries']:
             samePlace = False
             placeGoogle = SocialDataRepository.getPlacesFromGoogle(query['keyword'])
             for place in places:
-                samePlace = SocialDataRepository.compareQueryAndPlace(place, placeGoogle, query['keyword'])
+                samePlace = SocialDataRepository.comparePlace(place, placeGoogle)
                 if samePlace:
                    break
             if samePlace:
-                queries.append(SocialDataRepository.createQuerySchema(query, place['id']))
+                SocialDataRepository.saveQuery(SocialDataRepository.createQuerySchema(query, place['id']), place['id'])
             else:
-                queries.append(SocialDataRepository.createQuerySchema(query, 0))
-        queryRDD = sc.parallelize(queries)
-        queryDF = spark.createDataFrame(queryRDD)
-        queryDF.write.parquet("QUERY.parquet")
-        queryDF.printSchema()
+                SocialDataRepository.saveQuery(SocialDataRepository.createQuerySchema(query, 0), 0)
 
 # for tweet
 if not path.exists("TW_TWEET.parquet"):
@@ -90,14 +80,12 @@ if not path.exists("TW_TWEET.parquet"):
             print("total backup: ", len(json))
 
 
-#spare code
-    # rawTweets = []
-    # for tweet in tweetsJSON:
-    #     normalizedTweet = json_normalize(tweet)
-    #     map(lambda column: normalizedTweet.rename(columns = {column: ''.join(map(lambda t: t.replace(".", "_"), list(column)))}, inplace = True) ,normalizedTweet.columns)
-    #     rawTweets.append(normalizedTweet.to_json())
-    # rawTweetRDD = sc.parallelize(rawTweets)
-    # rawTweetDF = spark.read.json(rawTweetRDD)
-    # rawTweetDF.write.parquet("rawTweet.parquet")
-
-        
+# spare code
+#     rawTweets = []
+#     for tweet in tweetsJSON:
+#         normalizedTweet = json_normalize(tweet)
+#         map(lambda column: normalizedTweet.rename(columns = {column: ''.join(map(lambda t: t.replace(".", "_"), list(column)))}, inplace = True) ,normalizedTweet.columns)
+#         rawTweets.append(normalizedTweet.to_json())
+#     rawTweetRDD = sc.parallelize(rawTweets)
+#     rawTweetDF = spark.read.json(rawTweetRDD)
+#     rawTweetDF.write.parquet("rawTweet.parquet")

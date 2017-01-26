@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
 from pyspark import SparkContext
 from pyspark.sql import *
-from pandas.io.json import json_normalize
+from pyspark.sql.types import *
 from geopy.distance import great_circle
 from decimal import Decimal
 import dateutil.parser as date
 import uuid
+import json
 import TwitterRepository
 import FoursquareRepository
 import FacebookRepository
+import sys
+sys.path.append('../service')
+from service.SocialDataService import writeParquet
 import googlemaps
-import json
 import os.path as path
 from random import randint
 
@@ -22,13 +25,13 @@ spark = SparkSession\
 
 sc = spark.sparkContext
 
-def writeParquet(parquetFile,rowArr):
-    if len(rowArr) > 0:
-        rowRDD = sc.parallelize(rowArr)
-        rowDF = spark.createDataFrame(rowRDD)
-        rowDF.write.mode("append").parquet(parquetFile)
-    else:
-        print("no row written")
+# def writeParquet(parquetFile,rowArr):
+#     if len(rowArr) > 0:
+#         rowRDD = sc.parallelize(rowArr)
+#         rowDF = spark.createDataFrame(rowRDD)
+#         rowDF.write.mode("append").parquet(parquetFile)
+#     else:
+#         print("no row written")
 
 
 #Twitter
@@ -37,7 +40,7 @@ def saveTweet(data):
     twitter = {}
     twitter['tweets'] = filteredTweet
     twitter['query'] = data['query']
-    # SocialDataNormalize("twitter", twitter)
+    SocialDataNormalize("twitter", twitter)
 
 #foursquare
 def addFQVenue(data):
@@ -188,6 +191,7 @@ def SocialDataNormalize(type, data):
     #     socialDataBaseDF = spark.read.parquet(socialDataParquet)
     if type == "twitter":
         for tweet in data['tweets']:
+            tweet['place_id'] = data['query']['place_id']
             normalizedData = createSocialDataSchema("twitter", tweet)
             socialDataArr.append(normalizedData)
     elif type == "FQ_TIP":
@@ -208,14 +212,14 @@ def SocialDataNormalize(type, data):
         normalizedData = createSocialDataSchema(type, data)
         socialDataArr.append(normalizedData)
     # print(socialDataArr)
-    writeParquet(socialDataParquet,socialDataArr)
+    writeParquet(socialDataParquet,socialDataArr, sc, spark, getSocialDataSchemaForDF())
 
 def createSocialDataSchema(type, data):
     newData = {}
     newData['id'] = str(uuid.uuid4())
 
     if type == "twitter":
-        newData['created_at'] = date.parse(data['created_at'])
+        newData['created_at'] = data['created_at']
         newData['geolocation'] = data['geolocation']
         newData['place_id'] = data['place_id']
         newData['message'] = data['text']
@@ -252,6 +256,19 @@ def createSocialDataSchema(type, data):
         return newData
     return None
 
+def getSocialDataSchemaForDF():
+    schema = StructType([
+                StructField("id", StringType(), True),
+                StructField("created_at", StringType(), True),
+                StructField("geolocation", ArrayType(DoubleType()), True),
+                StructField("place_id", StringType(), True),
+                StructField("message", StringType(), True),
+                StructField("number_of_checkin", IntegerType(), True),
+                StructField("source", StringType(), True),
+                StructField("source_id", StringType(), True)
+            ])
+    return schema
+
 #Query table#########################################
 def saveQuery(query,place_id):
     queryParquet = "QUERY.parquet"
@@ -261,7 +278,7 @@ def saveQuery(query,place_id):
         if existQuery.count() > 0:
             return existQuery.first().id
     newQuery = createQuerySchema(query,place_id)
-    writeParquet(queryParquet,[newQuery])
+    writeParquet(queryParquet,[newQuery], sc, spark, getQuerySchemaForDF())
     return newQuery['id']
 
 def createQuerySchema(query, place_id):
@@ -272,19 +289,28 @@ def createQuerySchema(query, place_id):
     newQuery['place_id'] = place_id
     return newQuery
 
+def getQuerySchemaForDF():
+    schema = StructType([
+                StructField("id", StringType(), True),
+                StructField("keyword", StringType(), True),
+                StructField("frequency", IntegerType(), True),
+                StructField("place_id", StringType(), True)
+            ])
+    return schema
+
 #Place table###############################################
 def savePlace(place):
     placeParquet = "PLACE.parquet"
     if path.exists(placeParquet):
         placeBaseDF = spark.read.parquet(placeParquet)
-        placeLL = place['geolocation'].split(",")
+        placeLL = place['geolocation']
         allPlace = placeBaseDF.collect()
         for existPlace in allPlace:
-            existLL = existPlace['geolocation'].split(",")
+            existLL = existPlace['geolocation']
             if compareLatLng(existLL[0],existLL[1],placeLL[0],placeLL[1]):
                 return existPlace['id']
     newPlace = createPlaceSchema(place)
-    writeParquet(placeParquet,[newPlace])
+    writeParquet(placeParquet,[newPlace], sc, spark, getPlaceSchemaForDF())
     return newPlace['id']
 
 def createPlaceSchema(place):
@@ -294,8 +320,16 @@ def createPlaceSchema(place):
     newPlace['geolocation'] = place['geolocation']
     return newPlace
 
+def getPlaceSchemaForDF():
+    schema = StructType([
+                StructField("id", StringType(), True),
+                StructField("name", StringType(), True),
+                StructField("geolocation", ArrayType(DoubleType()), True)
+            ])
+    return schema
+
 def comparePlace(place_db, place_google): #place from database abd place from google
-    geolo_db = place_db['geolocation'].split(",")
+    geolo_db = place_db['geolocation']
     samePlace = False
     if place_google != None:
         for place in place_google:

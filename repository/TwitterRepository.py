@@ -40,7 +40,7 @@ def saveTweet(tweets, queryId): #queryId is packed with Tweet Data
             saveUserFromTweet(tweet['user'])
         saveRawTweet(tweets)
     print len(tweetArr)
-    writeParquet(tweetParquet, tweetArr, sc, spark)
+    writeParquet(tweetParquet, tweetArr, sc, spark, getTweetSchemaForDF())
     return tweetArr #for saving to Social table
 
 
@@ -76,9 +76,9 @@ def saveUserFromTweet(user):
         existUser = userBaseDF.where(userBaseDF.id == user['id'])
         selectUserCol(user)
         if existUser.count() == 0:
-           writeParquet(userParquet, [selectUserCol(user)], sc, spark)
+           writeParquet(userParquet, [selectUserCol(user)], sc, spark, getUserSchemaForDF())
     else:
-        writeParquet(userParquet, [selectUserCol(user)], sc, spark)
+        writeParquet(userParquet, [selectUserCol(user)], sc, spark, getUserSchemaForDF())
 
 def selectUserCol(user):
     newUser = {}
@@ -87,26 +87,26 @@ def selectUserCol(user):
     newUser['screen_name'] = user['screen_name']
     return newUser
 
-# def getTweetSchemaForDF():
-    # schema = StructType([
-    #             StructField("id", StringType(), True),
-    #             StructField("created_at", StringType(), True),
-    #             StructField("text", StringType(), True),
-    #             StructField("hashtags", ArrayType(StringType()), True),
-    #             StructField("geolocation", ArrayType(DoubleType()), True),
-    #             StructField("favorite_count", LongType(), True),
-    #             StructField("tw_user_id", StringType(), True),
-    #             StructField("query_id", StringType(), True)
-    #         ])
-    # return schema
+def getTweetSchemaForDF():
+    schema = StructType([
+                StructField("id", StringType(), True),
+                StructField("created_at", StringType(), True),
+                StructField("text", StringType(), True),
+                StructField("hashtags", ArrayType(StringType()), True),
+                StructField("geolocation", ArrayType(DoubleType()), True),
+                StructField("favorite_count", LongType(), True),
+                StructField("tw_user_id", StringType(), True),
+                StructField("query_id", StringType(), True)
+            ])
+    return schema
 
-# def getUserSchemaForDF():
-    # schema = StructType([
-    #             StructField("id", StringType(), True),
-    #             StructField("name", StringType(), True),
-    #             StructField("screen_name", StringType(), True)
-    #         ])
-    # return schema
+def getUserSchemaForDF():
+    schema = StructType([
+                StructField("id", StringType(), True),
+                StructField("name", StringType(), True),
+                StructField("screen_name", StringType(), True)
+            ])
+    return schema
 
 
 #########################################################################################################

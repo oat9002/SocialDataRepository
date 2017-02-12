@@ -212,7 +212,7 @@ def SocialDataNormalize(type, data):
         normalizedData = createSocialDataSchema(type, data)
         socialDataArr.append(normalizedData)
     # print(socialDataArr)
-    writeParquet(socialDataParquet,socialDataArr, sc, spark, getSocialDataSchemaForDF())
+    writeParquet(socialDataParquet,socialDataArr, sc, spark)
 
 def createSocialDataSchema(type, data):
     newData = {}
@@ -256,18 +256,18 @@ def createSocialDataSchema(type, data):
         return newData
     return None
 
-def getSocialDataSchemaForDF():
-    schema = StructType([
-                StructField("id", StringType(), True),
-                StructField("created_at", StringType(), True),
-                StructField("geolocation", ArrayType(DoubleType()), True),
-                StructField("place_id", StringType(), True),
-                StructField("message", StringType(), True),
-                StructField("number_of_checkin", IntegerType(), True),
-                StructField("source", StringType(), True),
-                StructField("source_id", StringType(), True)
-            ])
-    return schema
+# def getSocialDataSchemaForDF():
+#     schema = StructType([
+#                 StructField("id", StringType(), True),
+#                 StructField("created_at", StringType(), True),
+#                 StructField("geolocation", ArrayType(DoubleType()), True),
+#                 StructField("place_id", StringType(), True),
+#                 StructField("message", StringType(), True),
+#                 StructField("number_of_checkin", IntegerType(), True),
+#                 StructField("source", StringType(), True),
+#                 StructField("source_id", StringType(), True)
+#             ])
+#     return schema
 
 #Query table#########################################
 def saveQuery(query,place_id):
@@ -278,7 +278,7 @@ def saveQuery(query,place_id):
         if existQuery.count() > 0:
             return existQuery.first().id
     newQuery = createQuerySchema(query,place_id)
-    writeParquet(queryParquet,[newQuery], sc, spark, getQuerySchemaForDF())
+    writeParquet(queryParquet,[newQuery], sc, spark)
     return newQuery['id']
 
 def createQuerySchema(query, place_id):
@@ -303,14 +303,14 @@ def savePlace(place):
     placeParquet = "PLACE.parquet"
     if path.exists(placeParquet):
         placeBaseDF = spark.read.parquet(placeParquet)
-        placeLL = place['geolocation']
+        placeLL = place['geolocation'].split(",")
         allPlace = placeBaseDF.collect()
         for existPlace in allPlace:
-            existLL = existPlace['geolocation']
+            existLL = existPlace['geolocation'].split(",")
             if compareLatLng(existLL[0],existLL[1],placeLL[0],placeLL[1]):
                 return existPlace['id']
     newPlace = createPlaceSchema(place)
-    writeParquet(placeParquet,[newPlace], sc, spark, getPlaceSchemaForDF())
+    writeParquet(placeParquet,[newPlace], sc, spark)
     return newPlace['id']
 
 def createPlaceSchema(place):
@@ -320,16 +320,16 @@ def createPlaceSchema(place):
     newPlace['geolocation'] = place['geolocation']
     return newPlace
 
-def getPlaceSchemaForDF():
-    schema = StructType([
-                StructField("id", StringType(), True),
-                StructField("name", StringType(), True),
-                StructField("geolocation", ArrayType(DoubleType()), True)
-            ])
-    return schema
+# def getPlaceSchemaForDF():
+#     schema = StructType([
+#                 StructField("id", StringType(), True),
+#                 StructField("name", StringType(), True),
+#                 StructField("geolocation", ArrayType(DoubleType()), True)
+#             ])
+#     return schema
 
 def comparePlace(place_db, place_google): #place from database abd place from google
-    geolo_db = place_db['geolocation']
+    geolo_db = place_db['geolocation'].split(",")
     samePlace = False
     if place_google != None:
         for place in place_google:

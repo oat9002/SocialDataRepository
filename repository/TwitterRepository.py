@@ -5,6 +5,7 @@ sys.path.append('../service')
 from pyspark import SparkContext
 from pyspark.sql import *
 from pyspark.sql.types import *
+from service.SocialDataService import writeParquetWithSchema
 from service.SocialDataService import writeParquet
 from geopy.distance import great_circle
 import dateutil.parser as date
@@ -39,7 +40,7 @@ def saveTweet(tweets, queryId): #queryId is packed with Tweet Data
             tweetArr.append(selectTweetCol(tweet, queryId))
             saveUserFromTweet(tweet['user'])
         saveRawTweet(tweets)
-    print len(tweetArr)
+    # writeParquetWithSchema(tweetParquet, tweetArr, getTweetSchemaForDF(), sc, spark)
     writeParquet(tweetParquet, tweetArr, sc, spark)
     return tweetArr #for saving to Social table
 
@@ -74,12 +75,12 @@ def saveUserFromTweet(user):
     if os.path.exists(userParquet):
         userBaseDF = spark.read.parquet(userParquet)
         existUser = userBaseDF.where(userBaseDF.id == user['id'])
-        selectUserCol(user)
         if existUser.count() == 0:
-           writeParquet(userParquet, [selectUserCol(user)], sc, spark)
+        #    writeParquetWithSchema(userParquet, [selectUserCol(user)], getUserSchemaForDF(), sc, spark)
+            writeParquet(userParquet, [selectUserCol(user)], sc, spark)
     else:
+        # writeParquetWithSchema(userParquet, [selectUserCol(user)], getUserSchemaForDF(), sc, spark)
         writeParquet(userParquet, [selectUserCol(user)], sc, spark)
-
 def selectUserCol(user):
     newUser = {}
     newUser['id'] = user['id_str']
@@ -87,26 +88,26 @@ def selectUserCol(user):
     newUser['screen_name'] = user['screen_name']
     return newUser
 
-# def getTweetSchemaForDF():
-#     schema = StructType([
-#                 StructField("id", StringType(), True),
-#                 StructField("created_at", StringType(), True),
-#                 StructField("text", StringType(), True),
-#                 StructField("hashtags", ArrayType(StringType()), True),
-#                 StructField("geolocation", ArrayType(DoubleType()), True),
-#                 StructField("favorite_count", LongType(), True),
-#                 StructField("tw_user_id", StringType(), True),
-#                 StructField("query_id", StringType(), True)
-#             ])
-#     return schema
-#
-# def getUserSchemaForDF():
-#     schema = StructType([
-#                 StructField("id", StringType(), True),
-#                 StructField("name", StringType(), True),
-#                 StructField("screen_name", StringType(), True)
-#             ])
-#     return schema
+def getTweetSchemaForDF():
+    schema = StructType([
+                StructField("id", StringType(), True),
+                StructField("created_at", StringType(), True),
+                StructField("text", StringType(), True),
+                StructField("hashtags", ArrayType(StringType()), True),
+                StructField("geolocation", ArrayType(StringType()), True),
+                StructField("favorite_count", LongType(), True),
+                StructField("tw_user_id", StringType(), True),
+                StructField("query_id", StringType(), True)
+            ])
+    return schema
+
+def getUserSchemaForDF():
+    schema = StructType([
+                StructField("id", StringType(), True),
+                StructField("name", StringType(), True),
+                StructField("screen_name", StringType(), True)
+            ])
+    return schema
 
 
 #########################################################################################################

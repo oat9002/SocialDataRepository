@@ -1,10 +1,23 @@
 {
   "queries" : [
-              {"keyword":"สยามพารากอน"},
-              {"keyword":"เดอะมอลล์บางกะปิ"},
               {"keyword":"kmitl"},
+              {"keyword":"สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง"},
+              {"keyword":"ตลาดนัดสุวรรณภูมิ"},
+              {"keyword":"เดอะมอลล์บางกะปิ"},
+              {"keyword":"the mall bangkapi"},
               {"keyword":"ซีคอนสแควร์"},
-              {"keyword":"ตลาดรถไฟศรีนครินทร์"},
-              {"keyword":"สุวรรณภูมิ"}
+              {"keyword":"seacon square"},
+              {"keyword":"สนามบินสุวรรณภูมิ"},
+              {"keyword":"ท่าอากาศยานสุวรรณภูมิ"},
+              {"keyword":"suvarnabhumi airport"},
+              {"keyword":"mbk"},
+              {"keyword":"มาบุญครอง"},
+              {"keyword":"เซนทรัลเวิลด์"},
+              {"keyword":"centralworld"},
+              {"keyword":"สยามดิสคัฟเวอรี่"},
+              {"keyword":"สยามเซ็นเตอร์"},
+              {"keyword":"siam center"},
+              {"keyword":"สยามพารากอน"},
+              {"keyword":"siam paragon"}
             ]
 }

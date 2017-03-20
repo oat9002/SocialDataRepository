@@ -13,6 +13,7 @@ import FacebookRepository
 import sys
 sys.path.append('../service')
 from service.SocialDataService import writeParquet
+from service.SocialDataService import writeParquetWithSchema
 import googlemaps
 import os.path as path
 from random import randint
@@ -212,6 +213,7 @@ def SocialDataNormalize(type, data):
         normalizedData = createSocialDataSchema(type, data)
         socialDataArr.append(normalizedData)
     # print(socialDataArr)
+    # writeParquetWithSchema(socialDataParquet,socialDataArr, getSocialDataSchemaForDF(), sc, spark)
     writeParquet(socialDataParquet,socialDataArr, sc, spark)
 
 def createSocialDataSchema(type, data):
@@ -256,21 +258,21 @@ def createSocialDataSchema(type, data):
         return newData
     return None
 
-# def getSocialDataSchemaForDF():
-#     schema = StructType([
-#                 StructField("id", StringType(), True),
-#                 StructField("created_at", StringType(), True),
-#                 StructField("geolocation", ArrayType(DoubleType()), True),
-#                 StructField("place_id", StringType(), True),
-#                 StructField("message", StringType(), True),
-#                 StructField("number_of_checkin", IntegerType(), True),
-#                 StructField("source", StringType(), True),
-#                 StructField("source_id", StringType(), True)
-#             ])
-#     return schema
+def getSocialDataSchemaForDF():
+    schema = StructType([
+                StructField("id", StringType(), True),
+                StructField("created_at", StringType(), True),
+                StructField("geolocation", ArrayType(StringType()), True),
+                StructField("place_id", StringType(), True),
+                StructField("message", StringType(), True),
+                StructField("number_of_checkin", IntegerType(), True),
+                StructField("source", StringType(), True),
+                StructField("source_id", StringType(), True)
+            ])
+    return schema
 
 #Query table#########################################
-def saveQuery(query,place_id):
+def saveQuery(query, place_id):
     queryParquet = "QUERY.parquet"
     if path.exists(queryParquet):
         queryBaseDF = spark.read.parquet(queryParquet)
@@ -320,13 +322,13 @@ def createPlaceSchema(place):
     newPlace['geolocation'] = place['geolocation']
     return newPlace
 
-# def getPlaceSchemaForDF():
-#     schema = StructType([
-#                 StructField("id", StringType(), True),
-#                 StructField("name", StringType(), True),
-#                 StructField("geolocation", ArrayType(DoubleType()), True)
-#             ])
-#     return schema
+def getPlaceSchemaForDF():
+    schema = StructType([
+                StructField("id", StringType(), True),
+                StructField("name", StringType(), True),
+                StructField("geolocation", ArrayType(DoubleType()), True)
+            ])
+    return schema
 
 def comparePlace(place_db, place_google): #place from database abd place from google
     geolo_db = place_db['geolocation'].split(",")

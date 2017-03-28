@@ -7,7 +7,7 @@ import uuid
 import os.path as path
 import datetime
 import dateutil.parser as date
-
+import pydoop.hdfs
 
 spark = SparkSession\
     .builder\
@@ -15,6 +15,7 @@ spark = SparkSession\
     .getOrCreate()
 
 sc = spark.sparkContext
+hdfs = pydoop.hdfs.hdfs()
 
 def writeParquet(parquetFile,rowArr):
     if len(rowArr) > 0:
@@ -26,8 +27,8 @@ def writeParquet(parquetFile,rowArr):
 
 #FB_PAGE####################################
 def savePage(page,queryId):
-    pageParquet = "FB_PAGE.parquet"
-    if path.exists(pageParquet):     
+    pageParquet = "hdfs://stack-02:9000/SocialDataRepository/FB_PAGE.parquet"
+    if hdfs.exists(pageParquet):     
         pageBaseDF = spark.read.parquet(pageParquet)
         existPage = pageBaseDF.where(pageBaseDF.pageid == page['id'])
         if existPage.count() == 0:
@@ -42,9 +43,9 @@ def selectPageCol(page,queryId):
 
 #FB_POST####################################
 def savePost(posts,pageId):
-    postParquet = "FB_POST.parquet"
+    postParquet = "hdfs://stack-02:9000/SocialDataRepository/FB_POST.parquet"
     allPost = []
-    if path.exists(postParquet):     
+    if hdfs.exists(postParquet):     
         postBaseDF = spark.read.parquet(postParquet)
         for post in posts['data']:
             existPost = postBaseDF.where(postBaseDF.postid == post['id'])
@@ -67,9 +68,9 @@ def selectPostCol(post,pageId):
 
 #FB_COMMENT####################################
 def saveComment(comments,postId):
-    commentParquet = "FB_COMMENT.parquet"
+    commentParquet = "hdfs://stack-02:9000/SocialDataRepository/FB_COMMENT.parquet"
     allComment = []
-    if path.exists(commentParquet):     
+    if hdfs.exists(commentParquet):     
         commentBaseDF = spark.read.parquet(commentParquet)
         for comment in comments['data']:
             existComment = commentBaseDF.where(commentBaseDF.commentid == comment['id'])
@@ -93,8 +94,8 @@ def selectCommentCol(comment,postId):
 
 #FB_USER####################################
 def saveUser(user):
-    userParquet = "FB_USER.parquet"
-    if path.exists(userParquet):     
+    userParquet = "hdfs://stack-02:9000/SocialDataRepository/FB_USER.parquet"
+    if hdfs.exists(userParquet):     
         userBaseDF = spark.read.parquet(userParquet)
         existUser = userBaseDF.where(userBaseDF.userid == user['id'])
         if existUser.count() == 0:

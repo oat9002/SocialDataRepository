@@ -11,21 +11,24 @@ from geopy.distance import great_circle
 import dateutil.parser as date
 import uuid
 import json
-
+import pydoop.hdfs 
 
 spark = SparkSession\
     .builder\
+    .master("spark://stack-02:7077")\
+    .config("spark.cores.max", 4)\
     .appName("TwitterRepository")\
     .getOrCreate()
 
 sc = spark.sparkContext
+hdfs = pydoop.hdfs.hdfs()
 
 #TW_TWEET table
 def saveTweet(tweets, queryId): #queryId is packed with Tweet Data
-    tweetParquet = "TW_TWEET.parquet"
-    userParquet = "TW_USER.parquet"
+    tweetParquet = "hdfs://stack-02:9000/SocialDataRepository/TW_TWEET.parquet"
+    userParquet = "hdfs://stack-02:9000/SocialDataRepository/TW_USER.parquet"
     tweetArr = []
-    if os.path.exists(tweetParquet):
+    if hdfs.exists(tweetParquet):
         tweetBaseDF = spark.read.parquet(tweetParquet)
         tweetArrBackup = []
         for tweet in tweets:
@@ -71,8 +74,8 @@ def saveRawTweet(tweets):
 
 #User table
 def saveUserFromTweet(user):
-    userParquet = "TW_USER.parquet"
-    if os.path.exists(userParquet):
+    userParquet = "hdfs://stack-02:9000/SocialDataRepository/TW_USER.parquet"
+    if hdfs.exists(userParquet):
         userBaseDF = spark.read.parquet(userParquet)
         existUser = userBaseDF.where(userBaseDF.id == user['id'])
         if existUser.count() == 0:

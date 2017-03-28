@@ -7,6 +7,7 @@ import uuid
 import os.path as path
 import datetime
 import dateutil.parser as date
+import pydoop.hdfs
 
 
 spark = SparkSession\
@@ -15,12 +16,14 @@ spark = SparkSession\
     .getOrCreate()
 
 sc = spark.sparkContext
-venueParquet = "FQ_VENUE.parquet"
-checkinParquet = "FQ_CHECKIN.parquet"
-tipParquet = "FQ_TIP.parquet"
-userParquet = "FQ_USER.parquet"
-photoParquet = "FQ_PHOTO.parquet"
-categoryParquet = "FQ_CATEGORY.parquet"
+hdfs = pydoop.hdfs.hdfs()
+
+venueParquet = "hdfs://stack-02:9000/SocialDataRepository/FQ_VENUE.parquet"
+checkinParquet = "hdfs://stack-02:9000/SocialDataRepository/FQ_CHECKIN.parquet"
+tipParquet = "hdfs://stack-02:9000/SocialDataRepository/FQ_TIP.parquet"
+userParquet = "hdfs://stack-02:9000/SocialDataRepository/FQ_USER.parquet"
+photoParquet = "hdfs://stack-02:9000/SocialDataRepository/FQ_PHOTO.parquet"
+categoryParquet = "hdfs://stack-02:9000/SocialDataRepository/FQ_CATEGORY.parquet"
 
 
 def writeParquet(parquetFile,rowArr):
@@ -32,7 +35,7 @@ def writeParquet(parquetFile,rowArr):
         print("no row written")
 
 def getAllVenue():
-    if path.exists(venueParquet):     
+    if hdfs.exists(venueParquet):     
         venueLst = []
         rows = spark.read.parquet(venueParquet).collect()
         for row in rows:
@@ -41,7 +44,7 @@ def getAllVenue():
     return None
 
 def findQueryIdByVenueId(venueId):
-    if path.exists(venueParquet):     
+    if hdfs.exists(venueParquet):     
         venueBaseDF = spark.read.parquet(venueParquet)
         existVenue = venueBaseDF.where(venueBaseDF.venueid == venueId)
         if existVenue.count() >= 0:
@@ -50,7 +53,7 @@ def findQueryIdByVenueId(venueId):
     
 #FQ_VENUE####################################
 def saveVenue(venue,queryId):
-    if path.exists(venueParquet):     
+    if hdfs.exists(venueParquet):     
         venueBaseDF = spark.read.parquet(venueParquet)
         existVenue = venueBaseDF.where(venueBaseDF.venueid == venue['id'])
         if existVenue.count() == 0:
@@ -83,7 +86,7 @@ def selectCheckinCol(checkin,venueId):
 #FQ_TIP####################################
 def saveTips(tips,venueId):
     allTips = []
-    if path.exists(tipParquet):     
+    if hdfs.exists(tipParquet):     
         tipBaseDF = spark.read.parquet(tipParquet)
         for tip in tips['items']:
             existTip = tipBaseDF.where(tipBaseDF.tipid == tip['id'])
@@ -108,7 +111,7 @@ def selectTipCol(tip,venueId):
 #FQ_USER####################################
 def saveUser(users):
     allUser = []
-    if path.exists(userParquet):     
+    if hdfs.exists(userParquet):     
         userBaseDF = spark.read.parquet(userParquet)
         for user in users:
             existUser = userBaseDF.where(userBaseDF.userid == user['id'])
@@ -133,7 +136,7 @@ def selectUserCol(user):
 #FQ_PHOTO####################################
 def savePhotos(photos,venueId):
     allPhoto = []
-    if path.exists(photoParquet):     
+    if hdfs.exists(photoParquet):     
         photoBaseDF = spark.read.parquet(photoParquet)
         for photo in photos['items']:
             existPhoto = photoBaseDF.where(photoBaseDF.photoid == photo['id'])
@@ -157,7 +160,7 @@ def selectPhotoCol(photo,venueId):
 
 #FQ_CATEGORY####################################
 def saveCategory(category):
-    if path.exists(categoryParquet):     
+    if hdfs.exists(categoryParquet):     
         categoryBaseDF = spark.read.parquet(categoryParquet)
         existCategory = categoryBaseDF.where(categoryBaseDF.cateid == category[0]['id'])
         if existCategory.count() == 0:

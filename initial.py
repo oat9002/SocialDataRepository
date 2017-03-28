@@ -8,41 +8,34 @@ from pandas.io.json import json_normalize
 import dateutil.parser as date
 import json
 import os.path as path
+import pydoop.hdfs
 
 spark = SparkSession\
     .builder\
+    .master("spark://stack-02:7077")\
+    .config("spark.cores.max", 2)\
     .appName("Initial TwitterRepository")\
     .getOrCreate()
 
 sc = spark.sparkContext
+hdfs = pydoop.hdfs.hdfs()
 
 # for place
-if not path.exists("PLACE.parquet"):
-    with open("place.json", "r") as file:
-        placeJson = json.load(file)
-        for place in placeJson['places']:
-            SocialDataRepository.savePlace(SocialDataRepository.createPlaceSchema(place))
+# if not hdfs.exists("PLACE.parquet"):
+#     with open("place.json", "r") as file:
+#         placeJson = json.load(file)
+#         for place in placeJson['places']:
+#             SocialDataRepository.savePlace(SocialDataRepository.createPlaceSchema(place))
 
-#for query
-if not path.exists("QUERY.parquet"):
-    with open('tweetQuery.json') as json_data:
-        queryJson = json.load(json_data)
-        placeDF = spark.read.parquet("PLACE.parquet")
-        places = placeDF.select(placeDF.id, placeDF.name, placeDF.geolocation).collect()
-        for query in queryJson['queries']:
-            samePlace = False
-            placeGoogle = SocialDataRepository.getPlacesFromGoogle(query['keyword'])
-            for place in places:
-                samePlace = SocialDataRepository.comparePlace(place, placeGoogle)
-                if samePlace:
-                   break
-            if samePlace:
-                SocialDataRepository.saveQuery(SocialDataRepository.createQuerySchema(query, place['id']), place['id'])
-            else:
-                SocialDataRepository.saveQuery(SocialDataRepository.createQuerySchema(query, 0), 0)
+# for query
+# if not hdfs.exists("hdfs://stack-02:9000/SocialDataRepository/QUERY.parquet"):
+#     with open('tweetQuery.json') as json_data:
+#         queryJson = json.load(json_data)
+#         for query in queryJson['queries']:
+#             SocialDataRepository.addPlaceOrQuery(query)
 
 # for tweet
-if not path.exists("TW_TWEET.parquet"):
+if not hdfs.exists("hdfs://stack-02:9000/SocialDataRepository/TW_TWEET.parquet"):
     with open('tweet.json') as json_data:
         tweetsJSON = json.load(json_data)
         for index in range(0, len(tweetsJSON)):
@@ -56,23 +49,25 @@ if not path.exists("TW_TWEET.parquet"):
         tweet_backup = []
         users = []
         places = []
-        queryDF = spark.read.parquet("QUERY.parquet")
+        queryDF = spark.read.parquet("hdfs://stack-02:9000/SocialDataRepository/QUERY.parquet")
         keywords = queryDF.select(queryDF.id, queryDF.keyword).collect()
+        print(queryDF.count())
         for tweet in tweetsJSON:
             for keyword in keywords:
                 if keyword['keyword'] in tweet['text']:
                     tweets.append(TwitterRepository.selectTweetCol(tweet, keyword['id']))
                     tweet_backup.append(tweet)
             users.append(TwitterRepository.selectUserCol(tweet['user']))
+        print(len(tweets))
         tweetRDD = sc.parallelize(tweets)
         tweetDF = spark.createDataFrame(tweetRDD)
         tweetDF.printSchema()
         print("total parquets: ", tweetDF.count())
-        tweetDF.write.parquet("TW_TWEET.parquet")
+        tweetDF.write.parquet("hdfs://stack-02:9000/SocialDataRepository/TW_TWEET.parquet")
         userRDD = sc.parallelize(users)
         userDF = spark.createDataFrame(userRDD)
-        if not path.exists("TW_USER.parquet"):
-            userDF.write.parquet('TW_USER.parquet')
+        if not hdfs.exists("hdfs://stack-02:9000/SocialDataRepository/TW_USER.parquet"):
+            userDF.write.parquet('hdfs://stack-02:9000/SocialDataRepository/TW_USER.parquet')
             userDF.printSchema()
         TwitterRepository.saveRawTweet(tweet_backup)
         with open("TW_TWEET_BACKUP.json", 'r') as test:

@@ -17,14 +17,18 @@ from service.SocialDataService import writeParquetWithSchema
 import googlemaps
 import os.path as path
 from random import randint
+import pydoop.hdfs
 
 
 spark = SparkSession\
     .builder\
+    .master("spark://stack-02:7077")\
+    .config("spark.cores.max", 4)\
     .appName("SocialDataRepository")\
     .getOrCreate()
 
 sc = spark.sparkContext
+hdfs = pydoop.hdfs.hdfs()
 
 # def writeParquet(parquetFile,rowArr):
 #     if len(rowArr) > 0:
@@ -103,7 +107,7 @@ def addPlaceOrQuery(newPlace):
         #search for coordinate
         placeGoogle = getPlacesFromGoogle(newPlace['keyword'])
         if placeGoogle != None:
-            placeParquet = "PLACE.parquet"
+            placeParquet = "hdfs://stack-02:9000/SocialDataRepository/PLACE.parquet"
             placeDF = spark.read.parquet(placeParquet)
             places = placeDF.select(placeDF.id, placeDF.geolocation).collect()
             samePlace = False
@@ -167,9 +171,9 @@ def addPlaceOrQuery(newPlace):
 #             queryDF.write.mode("append").parquet(
 
 def FindPlaceByVenueId(venueId):
-    queryParquet = "QUERY.parquet"
-    placeParquet = "PLACE.parquet"
-    if path.exists(queryParquet) and path.exists(placeParquet):
+    queryParquet = "hdfs://stack-02:9000/SocialDataRepository/QUERY.parquet"
+    placeParquet = "hdfs://stack-02:9000/SocialDataRepository/PLACE.parquet"
+    if hdfs.exists(queryParquet) and hdfs.exists(placeParquet):
         queryBaseDF = spark.read.parquet(queryParquet)
         placeBaseDF = spark.read.parquet(placeParquet)
         queryId = FoursquareRepository.findQueryIdByVenueId(venueId)
@@ -187,8 +191,8 @@ def FindPlaceByVenueId(venueId):
 
 def SocialDataNormalize(type, data):
     socialDataArr = []
-    socialDataParquet = "SOCIALDATA.parquet"
-    # if path.exists(socialDataParquet):
+    socialDataParquet = "hdfs://stack-02:9000/SocialDataRepository/SOCIALDATA.parquet"
+    # if hdfs.exists(socialDataParquet):
     #     socialDataBaseDF = spark.read.parquet(socialDataParquet)
     if type == "twitter":
         for tweet in data['tweets']:
@@ -273,8 +277,8 @@ def getSocialDataSchemaForDF():
 
 #Query table#########################################
 def saveQuery(query, place_id):
-    queryParquet = "QUERY.parquet"
-    if path.exists(queryParquet):
+    queryParquet = "hdfs://stack-02:9000/SocialDataRepository/QUERY.parquet"
+    if hdfs.exists(queryParquet):
         queryBaseDF = spark.read.parquet(queryParquet)
         existQuery = queryBaseDF.where(queryBaseDF.keyword == query['keyword'])
         if existQuery.count() > 0:
@@ -302,8 +306,8 @@ def getQuerySchemaForDF():
 
 #Place table###############################################
 def savePlace(place):
-    placeParquet = "PLACE.parquet"
-    if path.exists(placeParquet):
+    placeParquet = "hdfs://stack-02:9000/SocialDataRepository/PLACE.parquet"
+    if hdfs.exists(placeParquet):
         placeBaseDF = spark.read.parquet(placeParquet)
         placeLL = place['geolocation'].split(",")
         allPlace = placeBaseDF.collect()

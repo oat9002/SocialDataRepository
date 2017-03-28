@@ -18,15 +18,12 @@ def addPlaceOrQuery():
 
 @app.route("/twitter/addTweet", methods=['POST'])
 def addTweet():
-    SocialDataRepository.saveTweet(json.loads(request.get_data()))
+    twitter = json.loads(request.get_data())
+    for tw in twitter['twitter']:
+        SocialDataRepository.saveTweet(tw)
     # SocialDataRepository.saveTweet(request.get_json(force=True))
     # print json.dumps(request.get_data(), indent=2)
     return ('', 204)
-
-# @app.route("/twitter/read", methods=['GET'])
-# def readTweet():
-#     TwitterRepository.readTweet()
-#     return ('', 204)
 
 @app.route("/foursquare/addVenue", methods=['POST'])
 def addFQVenue():
@@ -56,5 +53,4 @@ def getAllFQVenue():
     return jsonify(venue)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',port=5002)
-    app.run(threaded=True)
+    app.run(host='0.0.0.0',port=5123, threaded=True)

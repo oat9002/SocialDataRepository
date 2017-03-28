@@ -5,26 +5,30 @@ sys.path.append('../service')
 from pyspark import SparkContext
 from pyspark.sql import *
 from pyspark.sql.types import *
+from service.SocialDataService import writeParquetWithSchema
 from service.SocialDataService import writeParquet
 from geopy.distance import great_circle
 import dateutil.parser as date
 import uuid
 import json
-
+import pydoop.hdfs 
 
 spark = SparkSession\
     .builder\
+    .master("spark://stack-02:7077")\
+    .config("spark.cores.max", 4)\
     .appName("TwitterRepository")\
     .getOrCreate()
 
 sc = spark.sparkContext
+hdfs = pydoop.hdfs.hdfs()
 
 #TW_TWEET table
 def saveTweet(tweets, queryId): #queryId is packed with Tweet Data
-    tweetParquet = "TW_TWEET.parquet"
-    userParquet = "TW_USER.parquet"
+    tweetParquet = "hdfs://stack-02:9000/SocialDataRepository/TW_TWEET.parquet"
+    userParquet = "hdfs://stack-02:9000/SocialDataRepository/TW_USER.parquet"
     tweetArr = []
-    if os.path.exists(tweetParquet):
+    if hdfs.exists(tweetParquet):
         tweetBaseDF = spark.read.parquet(tweetParquet)
         tweetArrBackup = []
         for tweet in tweets:
@@ -39,8 +43,8 @@ def saveTweet(tweets, queryId): #queryId is packed with Tweet Data
             tweetArr.append(selectTweetCol(tweet, queryId))
             saveUserFromTweet(tweet['user'])
         saveRawTweet(tweets)
-    print len(tweetArr)
-    writeParquet(tweetParquet, tweetArr, sc, spark, getTweetSchemaForDF())
+    # writeParquetWithSchema(tweetParquet, tweetArr, getTweetSchemaForDF(), sc, spark)
+    writeParquet(tweetParquet, tweetArr, sc, spark)
     return tweetArr #for saving to Social table
 
 
@@ -49,12 +53,12 @@ def selectTweetCol(tweet, queryId):
     newTweet['id'] = tweet['id_str']
     newTweet['created_at'] = date.parse(tweet['created_at']).isoformat()
     newTweet['text'] = tweet['text']
-    hashtags = []
+    hashtags = ['']
     if tweet['entities']['hashtags'] != None:
         for ht in tweet['entities']['hashtags']:
             hashtags.append(ht['text'])
     newTweet['hashtags'] = hashtags
-    newTweet['geolocation'] = tweet['coordinates']['coordinates'] if tweet['coordinates'] != None else []
+    newTweet['geolocation'] = tweet['coordinates']['coordinates'] if tweet['coordinates'] != None else ['']
     newTweet['favorite_count'] = tweet['favorite_count'] if tweet['favorited'] != False or  tweet['favorited'] != None else 0
     newTweet['tw_user_id'] = tweet['user']['id_str']
     newTweet['query_id'] = queryId
@@ -70,16 +74,16 @@ def saveRawTweet(tweets):
 
 #User table
 def saveUserFromTweet(user):
-    userParquet = "TW_USER.parquet"
-    if os.path.exists(userParquet):
+    userParquet = "hdfs://stack-02:9000/SocialDataRepository/TW_USER.parquet"
+    if hdfs.exists(userParquet):
         userBaseDF = spark.read.parquet(userParquet)
         existUser = userBaseDF.where(userBaseDF.id == user['id'])
-        selectUserCol(user)
         if existUser.count() == 0:
-           writeParquet(userParquet, [selectUserCol(user)], sc, spark, getUserSchemaForDF())
+        #    writeParquetWithSchema(userParquet, [selectUserCol(user)], getUserSchemaForDF(), sc, spark)
+            writeParquet(userParquet, [selectUserCol(user)], sc, spark)
     else:
-        writeParquet(userParquet, [selectUserCol(user)], sc, spark, getUserSchemaForDF())
-
+        # writeParquetWithSchema(userParquet, [selectUserCol(user)], getUserSchemaForDF(), sc, spark)
+        writeParquet(userParquet, [selectUserCol(user)], sc, spark)
 def selectUserCol(user):
     newUser = {}
     newUser['id'] = user['id_str']
@@ -93,7 +97,7 @@ def getTweetSchemaForDF():
                 StructField("created_at", StringType(), True),
                 StructField("text", StringType(), True),
                 StructField("hashtags", ArrayType(StringType()), True),
-                StructField("geolocation", ArrayType(DoubleType()), True),
+                StructField("geolocation", ArrayType(StringType()), True),
                 StructField("favorite_count", LongType(), True),
                 StructField("tw_user_id", StringType(), True),
                 StructField("query_id", StringType(), True)

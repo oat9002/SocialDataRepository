@@ -3,7 +3,7 @@
   "host": "203.151.85.73",
   "username": "oat",
   "port": 22,
-  "remotePath": "/usr/local/nodejs/SocialDataRepository/",
+  "remotePath": "/usr/local/nodejs/SocialDataRepository",
   "uploadOnSave": true,
   "sshKeyFile": "~/.ssh/id_rsa",
   "passphrase": ""

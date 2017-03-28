@@ -8,25 +8,31 @@ from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.sql import Row
 from repository import TwitterRepository
-from repository import SocialDataRepository
+# from repository import SocialDataRepository
 import os
 import json
 import googlemaps
 from geopy.distance import great_circle
 from decimal import Decimal
+import pydoop.hdfs 
 
 
 spark = SparkSession\
     .builder\
-    .appName("TwitterRepository")\
+    .appName("SocialDataRepository")\
     .getOrCreate()
+    # .master("spark://stack-02:7077")\
 
 sc = spark.sparkContext
-
-# queryParquet = "../QUERY.parquet"
+hdfs = pydoop.hdfs.hdfs()
+if hdfs.exists("hdfs://stack-02:9000/SocialDataRepository/TW_TWEET.parquet"):
+    print(True)
+else:
+    print(False)
+# queryParquet = "./QUERY.parquet"
 # queryBaseDF = spark.read.parquet(queryParquet)
 # queryBaseDF.show()
-#
+# #
 # queryDF = spark.read.parquet("../QUERY.parquet")
 # keywords = queryDF.select(queryDF.id, queryDF.keyword).collect()
 # print keywords[0]['id']
@@ -51,13 +57,13 @@ sc = spark.sparkContext
 # print(df.count())
 
 # queryDF = spark.read.parquet("./SocialDataRepository/QUERY.parquet")
-# placeDF = spark.read.parquet("./PLACE.parquet")
-# placeDF.show()
+# placeDF = spark.read.parquet("./QUERY.parquet")
+# print(placeDF.count())
 # newPlace = {}
 # newPlace['keyword'] = "paradise park"
 # SocialDataRepository.addPlaceOrQuery(newPlace)
-placeDF = spark.read.parquet("./PLACE.parquet")
-placeDF.show()
+# placeDF = spark.read.parquet("./QUERY.parquet")
+# print(placeDF.collect())
 # txt = 'สยามพารากอน'
 # placeDF = placeDF.where(placeDF.name != txt)
 # placeDF.show()

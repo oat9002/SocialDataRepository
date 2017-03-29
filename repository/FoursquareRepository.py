@@ -10,12 +10,6 @@ import dateutil.parser as date
 import pydoop.hdfs
 
 
-spark = SparkSession\
-    .builder\
-    .appName("FoursquareRepository")\
-    .getOrCreate()
-
-sc = spark.sparkContext
 hdfs = pydoop.hdfs.hdfs()
 
 venueParquet = "hdfs://stack-02:9000/SocialDataRepository/FQ_VENUE.parquet"
@@ -26,7 +20,7 @@ photoParquet = "hdfs://stack-02:9000/SocialDataRepository/FQ_PHOTO.parquet"
 categoryParquet = "hdfs://stack-02:9000/SocialDataRepository/FQ_CATEGORY.parquet"
 
 
-def writeParquet(parquetFile,rowArr):
+def writeParquet(parquetFile,rowArr, sc, spark):
     if len(rowArr) > 0:
         rowRDD = sc.parallelize(rowArr)
         rowDF = spark.createDataFrame(rowRDD)
@@ -52,14 +46,14 @@ def findQueryIdByVenueId(venueId):
     return None
     
 #FQ_VENUE####################################
-def saveVenue(venue,queryId):
+def saveVenue(venue,queryId, sc, spark):
     if hdfs.exists(venueParquet):     
         venueBaseDF = spark.read.parquet(venueParquet)
         existVenue = venueBaseDF.where(venueBaseDF.venueid == venue['id'])
         if existVenue.count() == 0:
-            writeParquet(venueParquet,[selectVenueCol(venue,queryId)])
+            writeParquet(venueParquet,[selectVenueCol(venue,queryId)], sc, spark)
     else:
-        writeParquet(venueParquet,[selectVenueCol(venue,queryId)])            
+        writeParquet(venueParquet,[selectVenueCol(venue,queryId)], sc, spark)            
 
 def selectVenueCol(venue,queryId):
     newVenue = {}
@@ -70,9 +64,9 @@ def selectVenueCol(venue,queryId):
     return newVenue
 
 #FQ_CHECKIN####################################
-def saveCheckin(checkin,venueId):
+def saveCheckin(checkin,venueId, sc, spark):
     checkin = selectCheckinCol(checkin,venueId)
-    writeParquet(checkinParquet,[checkin])     
+    writeParquet(checkinParquet,[checkin], sc, spark)     
     return checkin
 
 def selectCheckinCol(checkin,venueId):
@@ -84,7 +78,7 @@ def selectCheckinCol(checkin,venueId):
     return newCheckin
 
 #FQ_TIP####################################
-def saveTips(tips,venueId):
+def saveTips(tips,venueId, sc, spark):
     allTips = []
     if hdfs.exists(tipParquet):     
         tipBaseDF = spark.read.parquet(tipParquet)
@@ -92,11 +86,11 @@ def saveTips(tips,venueId):
             existTip = tipBaseDF.where(tipBaseDF.tipid == tip['id'])
             if existTip.count() == 0:
                 allTips.append(selectTipCol(tip,venueId))
-        writeParquet(tipParquet,allTips)     
+        writeParquet(tipParquet,allTips, sc, spark)     
     else:
         for tip in tips['items']:
             allTips.append(selectTipCol(tip,venueId))
-        writeParquet(tipParquet,allTips)    
+        writeParquet(tipParquet,allTips, sc, spark)    
     return allTips        
 
 def selectTipCol(tip,venueId):
@@ -109,7 +103,7 @@ def selectTipCol(tip,venueId):
     return newTip
 
 #FQ_USER####################################
-def saveUser(users):
+def saveUser(users, sc, spark):
     allUser = []
     if hdfs.exists(userParquet):     
         userBaseDF = spark.read.parquet(userParquet)
@@ -117,11 +111,11 @@ def saveUser(users):
             existUser = userBaseDF.where(userBaseDF.userid == user['id'])
             if existUser.count() == 0:
                 allUser.append(selectUserCol(user))
-        writeParquet(userParquet,allUser)
+        writeParquet(userParquet,allUser, sc, spark)
     else:
         for user in users:
             allUser.append(selectUserCol(user))            
-        writeParquet(userParquet,allUser)            
+        writeParquet(userParquet,allUser, sc, spark)            
 
 def selectUserCol(user):
     newUser = {}
@@ -134,7 +128,7 @@ def selectUserCol(user):
     return newUser
 
 #FQ_PHOTO####################################
-def savePhotos(photos,venueId):
+def savePhotos(photos,venueId, sc, spark):
     allPhoto = []
     if hdfs.exists(photoParquet):     
         photoBaseDF = spark.read.parquet(photoParquet)
@@ -146,7 +140,7 @@ def savePhotos(photos,venueId):
     else:
         for photo in photos['items']:
             allPhoto.append(selectPhotoCol(photo,venueId))
-        writeParquet(photoParquet,allPhoto)   
+        writeParquet(photoParquet,allPhoto, sc, spark)   
     return allPhoto         
 
 def selectPhotoCol(photo,venueId):
@@ -159,14 +153,14 @@ def selectPhotoCol(photo,venueId):
     return newPhoto
 
 #FQ_CATEGORY####################################
-def saveCategory(category):
+def saveCategory(category, sc, spark):
     if hdfs.exists(categoryParquet):     
         categoryBaseDF = spark.read.parquet(categoryParquet)
         existCategory = categoryBaseDF.where(categoryBaseDF.cateid == category[0]['id'])
         if existCategory.count() == 0:
-            writeParquet(categoryParquet,[selectCategoryCol(category[0])])
+            writeParquet(categoryParquet,[selectCategoryCol(category[0])], sc, spark)
     else:
-        writeParquet(categoryParquet,[selectCategoryCol(category[0])])            
+        writeParquet(categoryParquet,[selectCategoryCol(category[0])], sc, spark)            
 
 def selectCategoryCol(category):
     newCategory = {}

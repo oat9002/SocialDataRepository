@@ -23,7 +23,7 @@ import pydoop.hdfs
 spark = SparkSession\
     .builder\
     .master("spark://stack-02:7077")\
-    .config("spark.cores.max", 4)\
+    .config("spark.cores.max", 6)\
     .appName("SocialDataRepository")\
     .getOrCreate()
 
@@ -41,7 +41,7 @@ hdfs = pydoop.hdfs.hdfs()
 
 #Twitter
 def saveTweet(data):
-    filteredTweet = TwitterRepository.saveTweet(data['tweets'], data['query']['id'])
+    filteredTweet = TwitterRepository.saveTweet(data['tweets'], data['query']['id'], sc, spark)
     twitter = {}
     twitter['tweets'] = filteredTweet
     twitter['query'] = data['query']
@@ -54,8 +54,8 @@ def addFQVenue(data):
     place['keyword'] = venue['name']
     place['geolocation'] = str(venue['location']['lat'])+','+str(venue['location']['lng'])
     queryId = addPlaceOrQuery(place)
-    FoursquareRepository.saveVenue(venue,queryId)
-    FoursquareRepository.saveCategory(venue['categories'])
+    FoursquareRepository.saveVenue(venue,queryId, sc, spark)
+    FoursquareRepository.saveCategory(venue['categories'], sc, spark)
 
 def addFQCheckin(data):
     checkin = data['hereNow']
@@ -72,10 +72,10 @@ def addFQTips(data):
     venueId = data['venueId']
     social = {}
     allUser = []
-    savedTips = FoursquareRepository.saveTips(tips,venueId)
+    savedTips = FoursquareRepository.saveTips(tips,venueId, sc, spark)
     for tip in tips['items']:
         allUser.append(tip['user'])
-    FoursquareRepository.saveUser(allUser)
+    FoursquareRepository.saveUser(allUser, sc, spark)
     social['tips'] = savedTips
     social['place'] = FindPlaceByVenueId(venueId)
     if social['place'] != None:
@@ -87,10 +87,10 @@ def addFQPhotos(data):
     venueId = data['venueId']
     social = {}
     allUser = []
-    savedPhotos = FoursquareRepository.savePhotos(photos,venueId)
+    savedPhotos = FoursquareRepository.savePhotos(photos,venueId, sc, spark)
     for photo in photos['items']:
         allUser.append(photo['user'])
-    FoursquareRepository.saveUser(allUser)
+    FoursquareRepository.saveUser(allUser, sc, spark)
     social['photos'] = savedPhotos
     social['place'] = FindPlaceByVenueId(venueId)
     if social['place'] != None:

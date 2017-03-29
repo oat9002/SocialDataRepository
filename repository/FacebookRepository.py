@@ -9,15 +9,9 @@ import datetime
 import dateutil.parser as date
 import pydoop.hdfs
 
-spark = SparkSession\
-    .builder\
-    .appName("FacebookRepository")\
-    .getOrCreate()
-
-sc = spark.sparkContext
 hdfs = pydoop.hdfs.hdfs()
 
-def writeParquet(parquetFile,rowArr):
+def writeParquet(parquetFile,rowArr, sc, spark):
     if len(rowArr) > 0:
         rowRDD = sc.parallelize(rowArr)
         rowDF = spark.createDataFrame(rowRDD)
@@ -26,15 +20,15 @@ def writeParquet(parquetFile,rowArr):
         print("no row written")
 
 #FB_PAGE####################################
-def savePage(page,queryId):
+def savePage(page,queryId, sc, spark):
     pageParquet = "hdfs://stack-02:9000/SocialDataRepository/FB_PAGE.parquet"
     if hdfs.exists(pageParquet):     
         pageBaseDF = spark.read.parquet(pageParquet)
         existPage = pageBaseDF.where(pageBaseDF.pageid == page['id'])
         if existPage.count() == 0:
-            writeParquet(pageParquet,[selectPageCol(page,queryId)])
+            writeParquet(pageParquet,[selectPageCol(page,queryId)], sc, spark)
     else:
-        writeParquet(pageParquet,[selectPageCol(page,queryId)])       
+        writeParquet(pageParquet,[selectPageCol(page,queryId)], sc, spark)       
 def selectPageCol(page,queryId):
     newPage = {}
     newPage['pageid'] = page['id']
@@ -42,7 +36,7 @@ def selectPageCol(page,queryId):
     return newPage
 
 #FB_POST####################################
-def savePost(posts,pageId):
+def savePost(posts,pageId, sc, spark):
     postParquet = "hdfs://stack-02:9000/SocialDataRepository/FB_POST.parquet"
     allPost = []
     if hdfs.exists(postParquet):     
@@ -51,11 +45,11 @@ def savePost(posts,pageId):
             existPost = postBaseDF.where(postBaseDF.postid == post['id'])
             if existPost.count() == 0:
                 allPost.append(selectPostCol(post,pageId))
-        writeParquet(postParquet,allPost)     
+        writeParquet(postParquet,allPost, sc, spark)     
     else:
         for post in posts['data']:
             allPost.append(selectPostCol(post,pageId))
-        writeParquet(postParquet,allPost)     
+        writeParquet(postParquet,allPost, sc, spark)     
 
 def selectPostCol(post,pageId):
     newPost = {}
@@ -67,7 +61,7 @@ def selectPostCol(post,pageId):
     return newPost
 
 #FB_COMMENT####################################
-def saveComment(comments,postId):
+def saveComment(comments,postId, sc, spark):
     commentParquet = "hdfs://stack-02:9000/SocialDataRepository/FB_COMMENT.parquet"
     allComment = []
     if hdfs.exists(commentParquet):     
@@ -76,11 +70,11 @@ def saveComment(comments,postId):
             existComment = commentBaseDF.where(commentBaseDF.commentid == comment['id'])
             if existComment.count() == 0:
                 allComment.append(selectCommentCol(comment,postId))
-        writeParquet(commentParquet,allComment)     
+        writeParquet(commentParquet,allComment, sc, spark)     
     else:
         for comment in comments['data']:
             allComment.append(selectCommentCol(comment,postId))
-        writeParquet(commentParquet,allComment)     
+        writeParquet(commentParquet,allComment, sc, spark)     
 
 def selectCommentCol(comment,postId):
     newComment = {}
@@ -93,15 +87,15 @@ def selectCommentCol(comment,postId):
     return newComment
 
 #FB_USER####################################
-def saveUser(user):
+def saveUser(user, sc, spark):
     userParquet = "hdfs://stack-02:9000/SocialDataRepository/FB_USER.parquet"
     if hdfs.exists(userParquet):     
         userBaseDF = spark.read.parquet(userParquet)
         existUser = userBaseDF.where(userBaseDF.userid == user['id'])
         if existUser.count() == 0:
-            writeParquet(userParquet,[selectUserCol(user)])
+            writeParquet(userParquet,[selectUserCol(user)], sc, spark)
     else:
-        writeParquet(userParquet,[selectUserCol(user)])       
+        writeParquet(userParquet,[selectUserCol(user)], sc, spark)       
 def selectUserCol(user):
     newUser = {}
     newUser['userid'] = user['id']

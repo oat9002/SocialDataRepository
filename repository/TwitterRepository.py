@@ -11,20 +11,12 @@ from geopy.distance import great_circle
 import dateutil.parser as date
 import uuid
 import json
-import pydoop.hdfs 
+import pydoop.hdfs
 
-spark = SparkSession\
-    .builder\
-    .master("spark://stack-02:7077")\
-    .config("spark.cores.max", 4)\
-    .appName("TwitterRepository")\
-    .getOrCreate()
-
-sc = spark.sparkContext
 hdfs = pydoop.hdfs.hdfs()
 
 #TW_TWEET table
-def saveTweet(tweets, queryId): #queryId is packed with Tweet Data
+def saveTweet(tweets, queryId, sc, spark): #queryId is packed with Tweet Data
     tweetParquet = "hdfs://stack-02:9000/SocialDataRepository/TW_TWEET.parquet"
     userParquet = "hdfs://stack-02:9000/SocialDataRepository/TW_USER.parquet"
     tweetArr = []
@@ -35,13 +27,13 @@ def saveTweet(tweets, queryId): #queryId is packed with Tweet Data
             existTweet = tweetBaseDF.where(tweetBaseDF.id == tweet['id_str'])
             if existTweet.count() == 0:
                 tweetArr.append(selectTweetCol(tweet, queryId))
-                saveUserFromTweet(tweet['user'])
+                saveUserFromTweet(tweet['user'], sc, spark)
                 tweetArrBackup.append(tweet)
         saveRawTweet(tweetArrBackup)
     else:
         for tweet in tweets:
             tweetArr.append(selectTweetCol(tweet, queryId))
-            saveUserFromTweet(tweet['user'])
+            saveUserFromTweet(tweet['user'], sc, spark)
         saveRawTweet(tweets)
     # writeParquetWithSchema(tweetParquet, tweetArr, getTweetSchemaForDF(), sc, spark)
     writeParquet(tweetParquet, tweetArr, sc, spark)
@@ -73,7 +65,7 @@ def saveRawTweet(tweets):
             data.write(os.linesep)
 
 #User table
-def saveUserFromTweet(user):
+def saveUserFromTweet(user, sc, spark):
     userParquet = "hdfs://stack-02:9000/SocialDataRepository/TW_USER.parquet"
     if hdfs.exists(userParquet):
         userBaseDF = spark.read.parquet(userParquet)

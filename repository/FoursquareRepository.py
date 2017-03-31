@@ -28,7 +28,7 @@ def writeParquet(parquetFile,rowArr, sc, spark):
     else:
         print("no row written")
 
-def getAllVenue():
+def getAllVenue(spark):
     if hdfs.exists(venueParquet):     
         venueLst = []
         rows = spark.read.parquet(venueParquet).collect()
@@ -37,7 +37,7 @@ def getAllVenue():
         return venueLst
     return None
 
-def findQueryIdByVenueId(venueId):
+def findQueryIdByVenueId(venueId, spark):
     if hdfs.exists(venueParquet):     
         venueBaseDF = spark.read.parquet(venueParquet)
         existVenue = venueBaseDF.where(venueBaseDF.venueid == venueId)

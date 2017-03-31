@@ -35,7 +35,7 @@ def saveTweet(tweets, queryId, sc, spark): #queryId is packed with Tweet Data
             tweetArr.append(selectTweetCol(tweet, queryId))
             saveUserFromTweet(tweet['user'], sc, spark)
         saveRawTweet(tweets)
-    # writeParquetWithSchema(tweetParquet, tweetArr, getTweetSchemaForDF(), sc, spark)
+    #writeParquetWithSchema(tweetParquet, tweetArr, getTweetSchemaForDF(), sc, spark)
     writeParquet(tweetParquet, tweetArr, sc, spark)
     return tweetArr #for saving to Social table
 
@@ -54,7 +54,8 @@ def selectTweetCol(tweet, queryId):
     newTweet['favorite_count'] = tweet['favorite_count'] if tweet['favorited'] != False or  tweet['favorited'] != None else 0
     newTweet['tw_user_id'] = tweet['user']['id_str']
     newTweet['query_id'] = queryId
-    return newTweet
+    tweetRow = Row(id=newTweet['id'], created_at=newTweet['created_at'], text=newTweet['text'], hashtags=newTweet['hashtags'], geolocation=newTweet['geolocation'], favorite_count=newTweet['favorite_count'], tw_user_id=newTweet['tw_user_id'], query_id=newTweet['query_id'])
+    return tweetRow
 
 #Tweet raw data
 def saveRawTweet(tweets):
@@ -71,16 +72,16 @@ def saveUserFromTweet(user, sc, spark):
         userBaseDF = spark.read.parquet(userParquet)
         existUser = userBaseDF.where(userBaseDF.id == user['id'])
         if existUser.count() == 0:
-        #    writeParquetWithSchema(userParquet, [selectUserCol(user)], getUserSchemaForDF(), sc, spark)
+            #writeParquetWithSchema(userParquet, [selectUserCol(user)], getUserSchemaForDF(), sc, spark)
             writeParquet(userParquet, [selectUserCol(user)], sc, spark)
     else:
-        # writeParquetWithSchema(userParquet, [selectUserCol(user)], getUserSchemaForDF(), sc, spark)
+        #writeParquetWithSchema(userParquet, [selectUserCol(user)], getUserSchemaForDF(), sc, spark)
         writeParquet(userParquet, [selectUserCol(user)], sc, spark)
 def selectUserCol(user):
-    newUser = {}
-    newUser['id'] = user['id_str']
-    newUser['name'] = user['name']
-    newUser['screen_name'] = user['screen_name']
+    newUser = Row(id=user['id_str'], name=user['name'],screen_name=user['screen_name'])
+    #newUser['id'] = user['id_str']
+    #newUser['name'] = user['name']
+    #newUser['screen_name'] = user['screen_name']
     return newUser
 
 def getTweetSchemaForDF():

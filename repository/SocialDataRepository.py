@@ -61,7 +61,7 @@ def addFQCheckin(data):
     checkin = data['hereNow']
     venueId = data['venueId']
     social = {}
-    savedCheckin = FoursquareRepository.saveCheckin(checkin,venueId)
+    savedCheckin = FoursquareRepository.saveCheckin(checkin,venueId, sc, spark)
     social['checkin'] = savedCheckin
     social['place'] = FindPlaceByVenueId(venueId)
     if social['place'] != None:
@@ -97,7 +97,7 @@ def addFQPhotos(data):
         SocialDataNormalize("FQ_PHOTO",social)
 
 def getAllFQVenue():
-    return FoursquareRepository.getAllVenue()
+    return FoursquareRepository.getAllVenue(spark)
 
 
 #SOCIALDATA##################################
@@ -176,7 +176,7 @@ def FindPlaceByVenueId(venueId):
     if hdfs.exists(queryParquet) and hdfs.exists(placeParquet):
         queryBaseDF = spark.read.parquet(queryParquet)
         placeBaseDF = spark.read.parquet(placeParquet)
-        queryId = FoursquareRepository.findQueryIdByVenueId(venueId)
+        queryId = FoursquareRepository.findQueryIdByVenueId(venueId, spark)
         if queryId != None:
             existQuery = queryBaseDF.where(queryBaseDF.id == queryId)
             if existQuery.count() >= 0:
@@ -196,8 +196,10 @@ def SocialDataNormalize(type, data):
     #     socialDataBaseDF = spark.read.parquet(socialDataParquet)
     if type == "twitter":
         for tweet in data['tweets']:
-            tweet['place_id'] = data['query']['place_id']
-            normalizedData = createSocialDataSchema("twitter", tweet)
+	    temp = {}
+	    temp['tweet'] = tweet
+            temp['place_id'] = data['query']['place_id']
+            normalizedData = createSocialDataSchema(type, temp)
             socialDataArr.append(normalizedData)
     elif type == "FQ_TIP":
         for tip in data['tips']:
@@ -217,7 +219,7 @@ def SocialDataNormalize(type, data):
         normalizedData = createSocialDataSchema(type, data)
         socialDataArr.append(normalizedData)
     # print(socialDataArr)
-    # writeParquetWithSchema(socialDataParquet,socialDataArr, getSocialDataSchemaForDF(), sc, spark)
+    #writeParquetWithSchema(socialDataParquet,socialDataArr, getSocialDataSchemaForDF(), sc, spark)
     writeParquet(socialDataParquet,socialDataArr, sc, spark)
 
 def createSocialDataSchema(type, data):
@@ -225,13 +227,14 @@ def createSocialDataSchema(type, data):
     newData['id'] = str(uuid.uuid4())
 
     if type == "twitter":
-        newData['created_at'] = data['created_at']
-        newData['geolocation'] = data['geolocation']
-        newData['place_id'] = data['place_id']
-        newData['message'] = data['text']
-        newData['number_of_checkin'] = data['favorite_count']
-        newData['source'] = "twitter"
-        newData['source_id'] = data['id']
+        #newData['created_at'] = data['created_at']
+        #newData['geolocation'] = data['geolocation']
+        #newData['place_id'] = data['place_id']
+        #newData['message'] = data['text']
+        #newData['number_of_checkin'] = data['favorite_count']
+        #newData['source'] = "twitter"
+        #newData['source_id'] = data['id']
+	newData = Row(id=newData['id'], created_at=data['tweet'].created_at, geolocation=data['tweet'].geolocation, place_id=data['place_id'], message=data['tweet'].text, number_of_checkin=data['tweet'].favorite_count, source="twitter", source_id=data['tweet'].id)
         return newData
     elif type == "FQ_TIP":
         newData['created_at'] = data['tip']['created_at']
